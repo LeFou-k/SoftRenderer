@@ -1,0 +1,25 @@
+#pragma kernel ClearScreen
+#pragma kernel VertexTransform
+#pragma kernel RasterizeTriangles
+
+#include "../Common.hlsl"
+
+[numthreads(8,8,1)]
+void ClearScreen(uint3 id : SV_DispatchThreadID)
+{
+    _ColorTexture[id.xy] = _ClearColor;
+    _DepthTexture[id.xy] = 0;
+}
+
+[numthreads(8, 8, 1)]
+void VertexTransform(uint3 id : SV_DispatchThreadID)
+{
+    
+}
+
+[numthreads(8, 8, 1)]
+void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
+{
+    
+}
+
