@@ -66,6 +66,7 @@ namespace Rasterizer
                 }
             }
             
+            
             m_Rasterizer.Update();
             Profiler.EndSample();
 
