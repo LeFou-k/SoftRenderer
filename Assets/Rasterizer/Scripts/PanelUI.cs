@@ -6,28 +6,80 @@ namespace Rasterizer
 {
     public class PanelUI : MonoBehaviour
     {
-        private Text m_TriangleText;
-        private Text m_VertexText;
+        //FPS:
+        public float sampleTime = 1f;
+        private const int FONTSIZE = 20;
+        public Color fontColor = Color.white;
+        
+        public Text fpsText;
+        public Text triangleText;
+        public Text vertexText;
+        
+        private int frameCount;
+        private float timeCost;
+
+        public void Awake()
+        {
+            
+        }
 
         public void Start()
         {
-            throw new NotImplementedException();
+            frameCount = 0;
+            timeCost = 0.0f;
+            
+            UpdateText(fpsText);
+            UpdateText(triangleText);
+            UpdateText(vertexText);
+            
         }
 
         public void Update()
         {
-            throw new NotImplementedException();
+            frameCount++;
+            timeCost += Time.unscaledDeltaTime;
+
+            if (timeCost >= sampleTime)
+            {
+                float fps = frameCount / timeCost;
+                frameCount = 0;
+                timeCost = 0.0f;
+                UpdateText(fpsText, $"FPS: {fps.ToString("F2")}");
+                UpdateText(triangleText);
+                UpdateText(vertexText);
+            }
         }
 
-        public void OnGUI()
+        private void UpdateText(Text t, string str = "")
         {
-            throw new NotImplementedException();
-        }
+            if (t != null)
+            {
+                if (str != "")
+                {
+                    t.text = str;
+                }
+                if (t.color != fontColor)
+                {
+                    t.color = fontColor;
+                }
 
+                if (t.fontSize != FONTSIZE)
+                {
+                    t.fontSize = FONTSIZE;
+                }
+            }
+        }
+        // public void OnGUI()
+        // {
+        //     throw new NotImplementedException();
+        // }
+
+        //TODO: Add triangles rendered percentage
         public void PanelDelegate(int vertices, int triangles)
         {
-            m_TriangleText.text = $"Triangles: {triangles}";
-            m_VertexText.text = $"Vertices: {vertices}";
+            UpdateText(fpsText);
+            UpdateText(triangleText, $"Triangles: {triangles}");
+            UpdateText(vertexText, $"Vertices: {vertices}");
         }
     }
 }

@@ -88,7 +88,8 @@ namespace Rasterizer
             }
         }
         
+        
         //define show panel delegate
-        public delegate void UpdateDelegate(int vertices, int triangles);
+
     }
 }

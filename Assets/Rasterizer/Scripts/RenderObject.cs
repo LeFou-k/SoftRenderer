@@ -42,7 +42,11 @@ namespace Rasterizer
                 renderObjectData = new RenderObjectData(mesh);
             }
         }
-        
+
+        // public Matrix4x4 GetModelMatrix()
+        // {
+        //     
+        // }
         
     }
 }

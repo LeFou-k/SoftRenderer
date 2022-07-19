@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Rasterizer
@@ -10,15 +11,17 @@ namespace Rasterizer
     {
         [SerializeField] 
         private RasterizerSettings m_Settings;
+        [SerializeField] 
+        private Light m_MainLight;
 
+        public RawImage rawImage;
+        
         private Camera m_Camera;
         private List<RenderObject> m_RenderObjects = new List<RenderObject>();
         
         private Rasterizer m_Rasterizer;
-        [SerializeField] private Light m_MainLight;
-        
-        public RawImage rawImage;
-        private PanelUI m_PanelUI;
+
+        public PanelUI panelUI;
         
         void Start()
         {
@@ -51,10 +54,10 @@ namespace Rasterizer
 
             m_Rasterizer = new Rasterizer(w, h, m_Settings);
 
-            m_PanelUI = GetComponent<PanelUI>();
-            if (m_PanelUI != null)
+            if (panelUI != null)
             {
-                m_Rasterizer.updateDelegate = m_PanelUI.PanelDelegate;
+                m_Rasterizer.updateDelegate = panelUI.PanelDelegate;
+                
             }
         }
 

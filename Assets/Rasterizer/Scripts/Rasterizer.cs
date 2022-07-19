@@ -38,8 +38,14 @@ namespace Rasterizer
         public int triangles;
         public int trianglesVis;
 
+        //matrices:
+        private Matrix4x4 m_MatrixView;
+        private Matrix4x4 m_MatrixProj;
+        private Matrix4x4 m_MatrixModel;
+        private Matrix4x4 m_MatrixMVP;
 
-        public RasterizeUtils.UpdateDelegate updateDelegate;
+        public delegate void UpdateDelegate(int vertices, int triangles);
+        public UpdateDelegate updateDelegate;
 
         private static class Properties
         {
@@ -102,16 +108,32 @@ namespace Rasterizer
             m_RasterizeCS.SetFloats(Properties.clearColorId, clearColor.r, clearColor.g, clearColor.b, clearColor.a);
             m_RasterizeCS.Dispatch(Properties.clearKernel, Mathf.CeilToInt(width / 8f), Mathf.CeilToInt(height / 8f),
                 1);
-            triangles = trianglesVis = vertices = 0;
             
+            triangles = trianglesVis = vertices = 0;
         }
 
         public void SetAttributes(Camera camera, Light mainLight)
         {
+            Vector3 cameraPos = camera.transform.position;
+            cameraPos.z *= -1;
+            m_RasterizeCS.SetFloats(Properties.cameraWSId, cameraPos.x, cameraPos.y, cameraPos.z);
+
+            Vector3 lightDir = mainLight.transform.forward;
+            lightDir.z *= -1;
+            m_RasterizeCS.SetFloats(Properties.lightDirWSId, lightDir.x, lightDir.y, lightDir.z);
+
+            Color lightColor = mainLight.color;
+            m_RasterizeCS.SetFloats(Properties.lightColorId, lightColor.r, lightColor.g, lightColor.b);
+
+            Color ambientColor = m_Settings.AmbientColorr;
+            m_RasterizeCS.SetFloats(Properties.ambientColorId, ambientColor.r, ambientColor.g, ambientColor.b);
+            
+            RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
         }
 
         public void DrawCall(RenderObject renderObject)
         {
+            
         }
 
         public void UpdateFrame()
