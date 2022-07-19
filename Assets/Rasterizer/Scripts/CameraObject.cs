@@ -12,14 +12,15 @@ namespace Rasterizer
         private RasterizerSettings m_Settings;
 
         private Camera m_Camera;
-        private List<RenderObject> m_RenderObjects;
+        private List<RenderObject> m_RenderObjects = new List<RenderObject>();
+        
         private Rasterizer m_Rasterizer;
         [SerializeField] private Light m_MainLight;
         
-        private RawImage m_RawImage;
+        public RawImage rawImage;
         private PanelUI m_PanelUI;
         
-        private void Start()
+        void Start()
         {
             Initialize();
         }
@@ -32,8 +33,6 @@ namespace Rasterizer
         private void Initialize()
         {
             m_Camera = GetComponent<Camera>();
-            m_Camera.cullingMask = 0;
-            m_RawImage.gameObject.SetActive(true);
 
             //set render objects:
             m_RenderObjects.Clear();
@@ -44,7 +43,7 @@ namespace Rasterizer
             }
             Debug.LogFormat("Render {0} objects totally.", m_RenderObjects.Count);
 
-            RectTransform rect = m_RawImage.GetComponent<RectTransform>();
+            RectTransform rect = rawImage.GetComponent<RectTransform>();
             rect.sizeDelta = new Vector2(Screen.width, Screen.height);
             int w = Mathf.FloorToInt(rect.rect.width);
             int h = Mathf.FloorToInt(rect.rect.height);
@@ -62,9 +61,16 @@ namespace Rasterizer
         private void Render()
         {
             Profiler.BeginSample("Rendering per frame");
+            
+            rawImage.gameObject.SetActive(true);
+            
+            //clear screen
             m_Rasterizer.Clear();
+
+            //set vertex attributes
             m_Rasterizer.SetAttributes(m_Camera, m_MainLight);
 
+            //For every object => drawcall
             foreach (RenderObject obj in m_RenderObjects)
             {
                 if (obj.gameObject.activeInHierarchy)
@@ -73,8 +79,11 @@ namespace Rasterizer
                 }
             }
             
+            //update frame
+            rawImage.texture = m_Rasterizer.colorTexture;
             
             m_Rasterizer.UpdateFrame();
+            
             Profiler.EndSample();
 
         }

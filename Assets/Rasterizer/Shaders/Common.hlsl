@@ -33,9 +33,13 @@ RWTexture2D<float4> _ColorTexture;
 RWTexture2D<float1> _DepthTexture;
 
 
-float4 Fragment(Varyings varyings)
+float4 FragmentPhong(Varyings varyings)
 {
     return float4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
+float4 FragmentBlin(Varyings varyings)
+{
+    
+}
 #endif
