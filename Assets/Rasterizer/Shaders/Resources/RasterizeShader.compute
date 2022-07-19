@@ -11,15 +11,59 @@ void ClearScreen(uint3 id : SV_DispatchThreadID)
     _DepthTexture[id.xy] = 0;
 }
 
+//Vertex shader:
 [numthreads(16, 1, 1)]
 void VertexTransform(uint3 id : SV_DispatchThreadID)
 {
+    //Transform to right hand coordinate:
+    float4 positionOS = float4(_VertexBuffer[id.x].xy, -_VertexBuffer[id.x].z, 1.0f);
+    float3 normalOS = _NormalBuffer[id.x].xyz;
+
+    _VaryingsBuffer[id.x].positionCS = mul(_MatrixMVP, positionOS);
+    _VaryingsBuffer[id.x].positionWS = mul(_MatrixM, positionOS).xyz;
+    _VaryingsBuffer[id.x].normalOS = normalOS;
+    _VaryingsBuffer[id.x].normalWS = mul((float3x3)_MatrixM_IT, normalOS);
+    _VaryingsBuffer[id.x].uv = _UVBuffer[id.x];
     
 }
 
 [numthreads(16, 1, 1)]
 void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
 {
+    uint3 triIdx = _TriIndexBuffer[id.x];
+    float4 v[3] = { _VaryingsBuffer[triIdx.x].positionCS,
+                    _VaryingsBuffer[triIdx.y].positionCS,
+                    _VaryingsBuffer[triIdx.z].positionCS
+    };
+
+    //view frustum clipping
+    // if(FrustumClipping(v))
+    // {
+    //     return;
+    // }
     
+    //Perspective division: clip space to NDC
+    //reserve v.w for convenience
+    v[0] /= v[0].w;
+    v[1] /= v[1].w;
+    v[2] /= v[2].w;
+    
+    //BackFace culling
+    float3 edge01 = v[1].xyz - v[0].xyz;
+    float3 edge02 = v[2].xyz - v[0].xyz;
+    float3 crossVal = cross(edge01, edge02);
+
+    if(crossVal.z < 0) return;
+
+    for(int k = 0; k < 3; ++k)
+    {
+        float4 vec = v[k];
+        vec.xy = (vec.xy + float2(1.0f, 1.0f)) * 0.5f * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+        vec.z = vec.z * 0.5 + 0.5; //z value to linear01Z
+
+        v[k] = vec;
+    }
+    
+    Rasterization(triIdx, v);
 }
 

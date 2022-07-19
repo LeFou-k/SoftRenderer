@@ -7,6 +7,71 @@ namespace Rasterizer
         public const float PI = 3.1415926f;
         public const float D2R = PI / 180.0f;
 
+        public static Vector3 RotateVector(Vector3 axis, Vector3 v, float radius)
+        {
+            Vector3 vParallel = Vector3.Dot(axis, v) * axis;
+            Vector3 vVertical = v - vParallel;
+            float vVerticalLen = vVertical.magnitude;
+
+            Vector3 a = axis;
+            Vector3 b = vVertical.normalized;
+            Vector3 c = Vector3.Cross(a, b);
+            
+            Vector3 vVerticalRot = vVerticalLen * (Mathf.Cos(radius) * b + Mathf.Sin(radius) * c);
+            return vParallel + vVerticalRot;
+        }
+
+        public static Matrix4x4 GetRotationMatrix(Vector3 axis, float angle)
+        {
+            Vector3 vx = new Vector3(1, 0, 0);
+            Vector3 vy = new Vector3(0, 1, 0);
+            Vector3 vz = new Vector3(0, 0, 1);            
+
+            axis.Normalize();
+            float radius = angle * D2R;
+
+            var tx = RotateVector(axis, vx, radius);
+            var ty = RotateVector(axis, vy, radius);
+            var tz = RotateVector(axis, vz, radius);
+
+            Matrix4x4 rotationMat = Matrix4x4.identity;
+            rotationMat.SetColumn(0, tx);
+            rotationMat.SetColumn(1, ty);
+            rotationMat.SetColumn(2, tz);
+            return rotationMat;
+        }
+
+        public static Matrix4x4 GetTranslationMatrix(Vector3 translate)
+        {
+            Matrix4x4 translateMat = Matrix4x4.identity;
+            translateMat.SetColumn(3, new Vector4(translate.x, translate.y, -translate.z, 1));
+            return translateMat;
+        }
+
+        public static Matrix4x4 GetScaleMatrix(Vector3 scale)
+        {
+            Matrix4x4 scaleMat = Matrix4x4.identity;
+            scaleMat[0, 0] = scale.x;
+            scaleMat[1, 1] = scale.y;
+            scaleMat[2, 2] = scale.z;
+            return scaleMat;
+        }
+
+        public static Matrix4x4 GetRotZMatrix(float rotationAngle)
+        {
+            Matrix4x4 rotZMat = Matrix4x4.identity;
+            
+            float cosine = Mathf.Cos(rotationAngle * D2R);
+            float sine = Mathf.Sin(rotationAngle * D2R);
+
+            rotZMat.m00 = cosine;
+            rotZMat.m01 = -sine;
+            rotZMat.m10 = sine;
+            rotZMat.m11 = cosine;
+
+            return rotZMat;
+        }
+        
         public static Matrix4x4 GetViewMatrix(Vector3 eyePosition, Vector3 lookAt, Vector3 up)
         {
             Vector3 cameraZ = -lookAt.normalized;
@@ -40,6 +105,7 @@ namespace Rasterizer
         public static Matrix4x4 GetPerspectiveProjectionMatrix(float l, float r, float b, float t, float f, float n)
         {
             Matrix4x4 persp2Ortho = Matrix4x4.identity;
+            
             persp2Ortho.m00 = n;
             persp2Ortho.m11 = n;
             persp2Ortho.m22 = n + f;
@@ -65,11 +131,12 @@ namespace Rasterizer
         {
             //Transform from left hand coordinates to right hand coordinates:
             //z *= -1
-            Vector3 cameraPos = camera.transform.position;
+            Transform t = camera.transform;
+            Vector3 cameraPos = t.position;
             cameraPos.z *= -1;
-            Vector3 lookAt = camera.transform.forward;
+            Vector3 lookAt = t.forward;
             lookAt.z *= -1;
-            Vector3 up = camera.transform.up;
+            Vector3 up = t.up;
             up.z *= -1;
 
             viewMatrix = GetViewMatrix(cameraPos, lookAt, up);

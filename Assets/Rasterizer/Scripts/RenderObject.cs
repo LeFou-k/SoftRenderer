@@ -7,6 +7,7 @@ namespace Rasterizer
 {
     public class RenderObject : MonoBehaviour
     {
+        [System.NonSerialized]
         public Mesh mesh;
         public Texture2D texture;
 
@@ -35,7 +36,11 @@ namespace Rasterizer
             {
                 Debug.LogError("None mesh renderer or material found!");
             }
-            texture = meshRenderer.sharedMaterial.mainTexture as Texture2D ?? Texture2D.whiteTexture;
+
+            if (texture == null)
+            {
+                texture = Texture2D.whiteTexture;
+            }
 
             if (mesh != null)
             {
@@ -43,10 +48,25 @@ namespace Rasterizer
             }
         }
 
-        // public Matrix4x4 GetModelMatrix()
-        // {
-        //     
-        // }
+        public Matrix4x4 GetModelMatrix()
+        {
+            if (transform == null)
+            {
+                return RasterizeUtils.GetRotZMatrix(0);
+            }
+
+            Matrix4x4 scaleMat = RasterizeUtils.GetScaleMatrix(transform.lossyScale);
+            
+            Vector3 rotation = transform.rotation.eulerAngles;
+            Matrix4x4 rotXMat = RasterizeUtils.GetRotationMatrix(Vector3.right, -rotation.x);
+            Matrix4x4 rotYMat = RasterizeUtils.GetRotationMatrix(Vector3.up, -rotation.y);
+            Matrix4x4 rotZMat = RasterizeUtils.GetRotationMatrix(Vector3.forward, rotation.z);
+            Matrix4x4 rotationMat = rotYMat * rotXMat * rotZMat;
+            
+            Matrix4x4 translateMat = RasterizeUtils.GetTranslationMatrix(transform.position);
+
+            return translateMat * rotationMat * scaleMat;
+        }
         
     }
 }
