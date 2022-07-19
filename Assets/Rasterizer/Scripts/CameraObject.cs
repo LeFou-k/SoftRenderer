@@ -17,15 +17,16 @@ namespace Rasterizer
         [SerializeField] private Light m_MainLight;
         
         private RawImage m_RawImage;
+        private PanelUI m_PanelUI;
+        
         private void Start()
         {
             Initialize();
-            Render();
         }
 
         private void OnPostRender()
         {
-            
+            Render();
         }
 
         private void Initialize()
@@ -50,6 +51,12 @@ namespace Rasterizer
             Debug.Log($"Screen size: {w}x{h}");
 
             m_Rasterizer = new Rasterizer(w, h, m_Settings);
+
+            m_PanelUI = GetComponent<PanelUI>();
+            if (m_PanelUI != null)
+            {
+                m_Rasterizer.updateDelegate = m_PanelUI.PanelDelegate;
+            }
         }
 
         private void Render()
@@ -67,7 +74,7 @@ namespace Rasterizer
             }
             
             
-            m_Rasterizer.Update();
+            m_Rasterizer.UpdateFrame();
             Profiler.EndSample();
 
         }

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.VisualScripting;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 
@@ -13,6 +14,7 @@ namespace Rasterizer
     public class Rasterizer
     {
         public int width, height;
+        public float aspect;
         
         private RasterizerSettings m_Settings;
         private CommandBuffer m_Cmd;
@@ -20,17 +22,25 @@ namespace Rasterizer
         
         private readonly ComputeShader m_RasterizeCS;
 
-        private Texture2D m_ColorTexture;
-        public Texture2D colorTexture
+        private RenderTexture m_ColorTexture;
+        public Texture colorTexture
         {
             get => m_ColorTexture;
         }
 
-        private Texture2D m_DepthTexture;
-        public Texture2D DepthTexture
+        private RenderTexture m_DepthTexture;
+        public Texture DepthTexture
         {
             get => m_DepthTexture;
         }
+
+        public int vertices;
+        public int triangles;
+        public int trianglesVis;
+        
+        
+
+        public RasterizeUtils.UpdateDelegate updateDelegate;
         
         private static class Properties
         {
@@ -63,6 +73,22 @@ namespace Rasterizer
         {
             width = w;
             height = h;
+            aspect = h == 0 ? 0.0f : (float)w / h;
+
+            m_ColorTexture = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32)
+            {
+                enableRandomWrite = true,
+                filterMode = FilterMode.Point
+            };
+            m_ColorTexture.Create();
+
+            m_DepthTexture = new RenderTexture(w, h, 0, RenderTextureFormat.RGFloat)
+            {
+                enableRandomWrite = true,
+                filterMode = FilterMode.Point
+            };
+            m_DepthTexture.Create();
+            
             m_Settings = settings;
 
             m_RasterizeCS = Resources.Load<ComputeShader>("RasterizeShader");
@@ -87,9 +113,12 @@ namespace Rasterizer
             
         }
 
-        public void Update()
+        public void UpdateFrame()
         {
-            
+            if (updateDelegate != null)
+            {
+                updateDelegate(vertices, triangles);
+            }
         }
 
         public void Release()
