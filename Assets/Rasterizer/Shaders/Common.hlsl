@@ -32,6 +32,14 @@ RWStructuredBuffer<Varyings> _VaryingsBuffer;
 RWTexture2D<float4> _ColorTexture;
 RWTexture2D<float1> _DepthTexture;
 
+void Vertex(uint vertexIndex)
+{
+    
+}
 
+float4 Fragment(Varyings varyings)
+{
+    return float4(1.0f, 1.0f, 1.0f, 1.0f);
+}
 
 #endif

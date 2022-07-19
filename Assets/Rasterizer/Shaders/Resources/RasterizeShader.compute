@@ -11,13 +11,13 @@ void ClearScreen(uint3 id : SV_DispatchThreadID)
     _DepthTexture[id.xy] = 0;
 }
 
-[numthreads(8, 8, 1)]
+[numthreads(16, 1, 1)]
 void VertexTransform(uint3 id : SV_DispatchThreadID)
 {
-    
+    Vertex(id.x);
 }
 
-[numthreads(8, 8, 1)]
+[numthreads(16, 1, 1)]
 void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
 {
     
