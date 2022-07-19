@@ -96,6 +96,7 @@ namespace Rasterizer
                 enableRandomWrite = true,
                 filterMode = FilterMode.Point
             };
+            
             m_DepthTexture.Create();
 
             m_Settings = settings;
