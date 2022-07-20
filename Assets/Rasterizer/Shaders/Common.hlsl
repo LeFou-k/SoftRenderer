@@ -36,6 +36,8 @@ RWStructuredBuffer<Varyings> _VaryingsBuffer;
 RWTexture2D<float4> _ColorTexture;
 RWTexture2D<uint> _DepthTexture;
 
+RWTexture2D<uint> _ShadowMapTexture;
+
 //textures:
 Texture2D<float4> _UVTexture;
 SamplerState sampler_UVTexture;
@@ -52,7 +54,7 @@ float4 FragmentPhong(Varyings varyings)
     float3 halfDir = normalize(viewDir + _LightDirWS);
 
     float NoH = dot(halfDir, varyings.normalWS);
-    float4 specular = ks * _LightColor * pow(saturate(NoH), 20);
+    float4 specular = ks * _LightColor * pow(saturate(NoH), 50);
 
     return saturate(_AmbientColor + diffuse + specular);
     // return specular; 
@@ -140,7 +142,8 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ColorTexture[uint2(x, y)] = float4(worldNormalP * 0.5f + 0.5f, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(varyings.uv, 0.0f, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
-                
+                // _ShadowMapTexture[uint2(x, y)].r = asfloat(_DepthTexture[uint2(x, y)]);
+                // _ShadowMapTexture[uint2(x, y)].r = asfloat(curDepth);
                 _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
                 
             }

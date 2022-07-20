@@ -36,6 +36,13 @@ namespace Rasterizer
             get => m_DepthTexture;
         }
 
+        private RenderTexture m_ShadowMapTexture;
+
+        public Texture shadowMapTexture
+        {
+            get => m_ShadowMapTexture;
+        }
+        
         public int vertices;
         public int triangles;
 
@@ -74,7 +81,8 @@ namespace Rasterizer
             public static readonly int colorTextureId = Shader.PropertyToID("_ColorTexture");
             public static readonly int depthTextureId = Shader.PropertyToID("_DepthTexture");
             public static readonly int uvTextureId = Shader.PropertyToID("_UVTexture");
-            
+
+            public static readonly int shadowMapTextureId = Shader.PropertyToID("_ShadowMapTexture");
         }
 
         public Rasterizer(int w, int h, RasterizerSettings settings)
@@ -97,6 +105,12 @@ namespace Rasterizer
             };
             m_DepthTexture.Create();
 
+            m_ShadowMapTexture = new RenderTexture(w, h, 0, RenderTextureFormat.RG32)
+            {
+                enableRandomWrite = true,
+                filterMode = FilterMode.Point
+            };
+
             m_Settings = settings;
 
             m_RasterizeCS = Resources.Load<ComputeShader>("RasterizeShader");
@@ -109,20 +123,25 @@ namespace Rasterizer
         {
             m_RasterizeCS.SetTexture(Properties.clearKernel, Properties.colorTextureId, colorTexture);
             m_RasterizeCS.SetTexture(Properties.clearKernel, Properties.depthTextureId, depthTexture);
+            m_RasterizeCS.SetTexture(Properties.clearKernel, Properties.shadowMapTextureId, shadowMapTexture);
             var clearColor = m_Settings.ClearColor;
             m_RasterizeCS.SetFloats(Properties.clearColorId, clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-            m_RasterizeCS.Dispatch(Properties.clearKernel, Mathf.CeilToInt(width / 8f), Mathf.CeilToInt(height / 8f),
+            m_RasterizeCS.Dispatch(Properties.clearKernel, Mathf.CeilToInt(width / 16f), Mathf.CeilToInt(height / 16f),
                 1);
             
             triangles  = vertices = 0;
         }
 
-        public void SetAttributes(Camera camera, Light mainLight)
+        public void SetCamera(Camera camera)
+        {
+            Vector3 cameraPos = camera.transform.position;
+            m_RasterizeCS.SetFloats(Properties.cameraWSId, cameraPos.x, cameraPos.y, -cameraPos.z);   
+            RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
+        }
+        
+        public void SetUniforms(Light mainLight)
         {
             
-            Vector3 cameraPos = camera.transform.position;
-            m_RasterizeCS.SetFloats(Properties.cameraWSId, cameraPos.x, cameraPos.y, -cameraPos.z);
-
             //lightDir: z = -z to right hand, -lightDir from shading point to light
             Vector3 lightDir = mainLight.transform.forward;
             m_RasterizeCS.SetFloats(Properties.lightDirWSId, -lightDir.x, -lightDir.y, lightDir.z);
@@ -135,8 +154,6 @@ namespace Rasterizer
             
             m_RasterizeCS.SetInts(Properties.screenSizeId, width, height);
             
-            RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
-
         }
 
         public void DrawCall(RenderObject renderObject)
@@ -166,9 +183,11 @@ namespace Rasterizer
             m_RasterizeCS.SetBuffer(Properties.rasterizeKernel, Properties.varyingsBufferId, data.varyingsBuffer);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.colorTextureId, colorTexture);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.depthTextureId, depthTexture);
+            m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.shadowMapTextureId, shadowMapTexture);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.uvTextureId, renderObject.texture);
             m_RasterizeCS.Dispatch(Properties.rasterizeKernel, Mathf.CeilToInt(triangles / 16.0f), 1, 1);
             Profiler.EndSample();
+            
         }
 
         public void UpdateFrame()

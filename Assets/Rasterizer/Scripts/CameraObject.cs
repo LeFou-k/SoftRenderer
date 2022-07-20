@@ -17,6 +17,9 @@ namespace Rasterizer
         public RawImage rawImage;
         
         private Camera m_Camera;
+        
+        private Camera m_LightCamera;
+        
         private List<RenderObject> m_RenderObjects = new List<RenderObject>();
         
         private Rasterizer m_Rasterizer;
@@ -33,10 +36,18 @@ namespace Rasterizer
             Render();
         }
 
+        // private Camera CreateLightCamera()
+        // {
+        //     GameObject lightCameraGO = new GameObject("Directional Light Camera")
+        //     {
+        //         transform = {  }
+        //     };
+        // }
+        
         private void Initialize()
         {
             m_Camera = GetComponent<Camera>();
-
+            
             //set render objects:
             m_RenderObjects.Clear();
             GameObject[] rootRenderObjs = this.gameObject.scene.GetRootGameObjects();
@@ -71,7 +82,8 @@ namespace Rasterizer
             m_Rasterizer.Clear();
 
             //set vertex attributes
-            m_Rasterizer.SetAttributes(m_Camera, m_MainLight);
+            m_Rasterizer.SetCamera(m_Camera);
+            m_Rasterizer.SetUniforms(m_MainLight);
 
             //For every object => drawcall
             foreach (RenderObject obj in m_RenderObjects)
@@ -82,8 +94,21 @@ namespace Rasterizer
                 }
             }
             
-            //update frame
-            rawImage.texture = m_Rasterizer.colorTexture;
+            //show texture:
+            switch (m_Settings._BufferOutput)
+            {
+                case RasterizerSettings.BufferOutput.Depth:
+                    rawImage.texture = m_Rasterizer.depthTexture;
+                    break;
+                case RasterizerSettings.BufferOutput.ShadowMap:
+                    rawImage.texture = m_Rasterizer.shadowMapTexture;
+                    break;
+                default:
+                    rawImage.texture = m_Rasterizer.colorTexture;
+                    break;
+            }
+            
+            // rawImage.texture = m_Rasterizer.colorTexture;
             
             m_Rasterizer.UpdateFrame();
             
@@ -94,6 +119,7 @@ namespace Rasterizer
         private void OnDestroy()
         {
             m_Rasterizer.Release();
+            
         }
     }
 }

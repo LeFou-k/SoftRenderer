@@ -2,14 +2,14 @@
 #pragma kernel VertexTransform
 #pragma kernel RasterizeTriangles
 
-
 #include "../Common.hlsl"
 
-[numthreads(8,8,1)]
+[numthreads(16, 16, 1)]
 void ClearScreen(uint3 id : SV_DispatchThreadID)
 {
     _ColorTexture[id.xy] = _ClearColor;
     _DepthTexture[id.xy] = 0;
+    _ShadowMapTexture[id.xy] = 0;
 }
 
 //Vertex shader:
@@ -68,4 +68,3 @@ void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
     
     Rasterization(triIdx, v);
 }
-
