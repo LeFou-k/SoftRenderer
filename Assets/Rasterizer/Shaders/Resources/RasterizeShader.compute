@@ -17,7 +17,7 @@ void VertexTransform(uint3 id : SV_DispatchThreadID)
 {
     //Transform to right hand coordinate:
     float4 positionOS = float4(_VertexBuffer[id.x].xy, -_VertexBuffer[id.x].z, 1.0f);
-    float3 normalOS = float3(_NormalBuffer[id.x].x, _NormalBuffer[id.y].y, -_NormalBuffer[id.z].z);
+    float3 normalOS = float3(_NormalBuffer[id.x].x, _NormalBuffer[id.y].y, _NormalBuffer[id.z].z);
 
     _VaryingsBuffer[id.x].positionCS = mul(_MatrixMVP, positionOS);
     _VaryingsBuffer[id.x].positionWS = mul(_MatrixM, positionOS).xyz;
