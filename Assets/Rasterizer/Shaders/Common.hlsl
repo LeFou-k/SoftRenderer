@@ -218,8 +218,10 @@ void ShadowRasterization(uint3 idx, float4 v[3])
                 continue;
             }
 
-            float z = 1.0f / (alpha / v0.w + beta / v1.w + gamma / v2.w);
-            float zp = (alpha * v0.z / v0.w + beta * v1.z / v1.w + gamma * v2.z / v2.w) * z;
+            // float z = 1.0f / (alpha / v0.w + beta / v1.w + gamma / v2.w);
+            // float zp = (alpha * v0.z / v0.w + beta * v1.z / v1.w + gamma * v2.z / v2.w) * z;
+
+            float zp = alpha * v0.z + beta * v1.z + gamma * v2.z;
             
             uint preDepth;
             uint curDepth = asuint(zp);

@@ -68,8 +68,7 @@ namespace Rasterizer
         // {
         //     throw new NotImplementedException();
         // }
-
-        //TODO: Add triangles rendered percentage
+        
         public void PanelDelegate(int vertices, int triangles)
         {
             UpdateText(fpsText);

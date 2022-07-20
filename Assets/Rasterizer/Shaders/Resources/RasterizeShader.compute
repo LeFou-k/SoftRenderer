@@ -71,6 +71,7 @@ void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
     
 }
 
+//TODO: Ortho projection
 [numthreads(16, 1, 1)]
 void ShadowMapVertexTransform(uint3 id : SV_DispatchThreadID)
 {
@@ -87,14 +88,14 @@ void ShadowMapRasterize(uint3 id : SV_DispatchThreadID)
                     _ShadowVaryingsBuffer[triIdx.z].positionCS
     };
     
-    if(FrustumClipping(v))
-    {
-        return;
-    }
+    // if(FrustumClipping(v))
+    // {
+    //     return;
+    // }
     
-    v[0] /= v[0].w;
-    v[1] /= v[1].w;
-    v[2] /= v[2].w;
+    // v[0] /= v[0].w;
+    // v[1] /= v[1].w;
+    // v[2] /= v[2].w;
     
     float3 edge01 = v[1].xyz - v[0].xyz;
     float3 edge02 = v[2].xyz - v[0].xyz;
