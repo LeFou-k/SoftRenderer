@@ -952,10 +952,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 5596690420794923151, guid: 474c6e8ee4efca943bcfdd904ddaace1, type: 3}
+    - target: {fileID: 1897983838437336938, guid: 474c6e8ee4efca943bcfdd904ddaace1, type: 3}
       propertyPath: texture
       value: 
       objectReference: {fileID: 2800000, guid: c7fef1b26798a324a984f4343136d213, type: 3}
+    - target: {fileID: 5596690420794923151, guid: 474c6e8ee4efca943bcfdd904ddaace1, type: 3}
+      propertyPath: texture
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 6314148574712131272, guid: 474c6e8ee4efca943bcfdd904ddaace1, type: 3}
       propertyPath: m_RootOrder
       value: 4

@@ -52,10 +52,10 @@ float4 FragmentPhong(Varyings varyings)
     float3 halfDir = normalize(viewDir + _LightDirWS);
 
     float NoH = dot(halfDir, varyings.normalWS);
-    float4 specular = ks * _LightColor * pow(saturate(NoH), 10);
+    float4 specular = ks * _LightColor * pow(saturate(NoH), 20);
 
-    return saturate(_AmbientColor + diffuse + specular);
-    // return specular; 
+    // return saturate(_AmbientColor + diffuse + specular);
+    return specular; 
     // return _AmbientColor;
     // return diffuse;
 }
@@ -137,12 +137,12 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ColorTexture[uint2(x, y)] = float4(normalP, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(normalP * 0.5 + 0.5, 1.0f);
 
-                // _ColorTexture[uint2(x, y)] = float4(worldNormalP, 1.0f);
+                _ColorTexture[uint2(x, y)] = float4(worldNormalP, 1.0f);
 
                 // _ColorTexture[uint2(x, y)] = float4(worldNormalP * 0.5f + 0.5f, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(varyings.uv, 0.0f, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
-                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
             }
         }
     }
