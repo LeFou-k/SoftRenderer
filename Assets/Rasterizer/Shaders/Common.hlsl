@@ -121,7 +121,6 @@ void Rasterization(uint3 idx, float4 v[3])
             {
                 float2 uvP = (alpha * vary0.uv / v0.w + beta * vary1.uv / v1.w + gamma * vary2.uv / v2.w) * z;
                 float3 normalP = (alpha * vary0.normalOS / v0.w + beta * vary1.normalOS / v1.w + gamma * vary2.normalOS / v2.w) * z;
-                normalP = normalize(normalP);
                 float3 worldPosP = (alpha * vary0.positionWS / v0.w + beta * vary1.positionWS / v1.w + gamma * vary2.positionWS / v2.w) * z;
                 float3 worldNormalP = (alpha * vary0.normalWS / v0.w + beta * vary1.normalWS / v1.w + gamma * vary2.normalWS / v2.w) * z;
 
