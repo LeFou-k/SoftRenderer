@@ -52,9 +52,12 @@ float4 FragmentPhong(Varyings varyings)
     float3 halfDir = normalize(viewDir + _LightDirWS);
 
     float NoH = dot(halfDir, varyings.normalWS);
-    float4 specular = ks * _LightColor * pow(saturate(NoH), 150);
+    float4 specular = ks * _LightColor * pow(saturate(NoH), 10);
 
-    return _AmbientColor + diffuse + specular;
+    return saturate(_AmbientColor + diffuse + specular);
+    // return specular; 
+    // return _AmbientColor;
+    // return diffuse;
 }
 
 bool FrustumClipping(float4 v[3])
@@ -118,6 +121,7 @@ void Rasterization(uint3 idx, float4 v[3])
             {
                 float2 uvP = (alpha * vary0.uv / v0.w + beta * vary1.uv / v1.w + gamma * vary2.uv / v2.w) * z;
                 float3 normalP = (alpha * vary0.normalOS / v0.w + beta * vary1.normalOS / v1.w + gamma * vary2.normalOS / v2.w) * z;
+                normalP = normalize(normalP);
                 float3 worldPosP = (alpha * vary0.positionWS / v0.w + beta * vary1.positionWS / v1.w + gamma * vary2.positionWS / v2.w) * z;
                 float3 worldNormalP = (alpha * vary0.normalWS / v0.w + beta * vary1.normalWS / v1.w + gamma * vary2.normalWS / v2.w) * z;
 
@@ -130,7 +134,7 @@ void Rasterization(uint3 idx, float4 v[3])
 
                 //Debug Vertex Transform:
                 // _ColorTexture[uint2(x, y)] = float4(0.8f, 0.2f, 0.3f, 1.0f);
-                _ColorTexture[uint2(x, y)] = float4(normalP, 1.0f);
+                // _ColorTexture[uint2(x, y)] = float4(normalP, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(normalP * 0.5 + 0.5, 1.0f);
 
                 // _ColorTexture[uint2(x, y)] = float4(worldNormalP, 1.0f);
@@ -138,7 +142,7 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ColorTexture[uint2(x, y)] = float4(worldNormalP * 0.5f + 0.5f, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(varyings.uv, 0.0f, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
-                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
             }
         }
     }

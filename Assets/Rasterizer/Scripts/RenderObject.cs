@@ -7,7 +7,7 @@ namespace Rasterizer
 {
     public class RenderObject : MonoBehaviour
     {
-        [System.NonSerialized]
+        [NonSerialized]
         public Mesh mesh;
         public Texture2D texture;
 

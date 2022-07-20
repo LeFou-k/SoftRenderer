@@ -5,14 +5,14 @@ namespace Rasterizer
 {
     public class RenderObjectData
     {
-        public ComputeBuffer vertexBuffer;
-        public ComputeBuffer normalBuffer;
-        public ComputeBuffer uvBuffer;
-        public ComputeBuffer triIndexBuffer;
-        public ComputeBuffer varyingsBuffer;
+        public readonly ComputeBuffer vertexBuffer;
+        public readonly ComputeBuffer normalBuffer;
+        public readonly ComputeBuffer uvBuffer;
+        public readonly ComputeBuffer triIndexBuffer;
+        public readonly ComputeBuffer varyingsBuffer;
 
-        public int triangleNum;
-        public int vertexNum;
+        public readonly int triangleNum;
+        public readonly int vertexNum;
         
         public RenderObjectData(Mesh mesh)
         { 
