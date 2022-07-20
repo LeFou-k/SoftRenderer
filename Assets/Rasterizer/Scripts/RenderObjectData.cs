@@ -10,7 +10,8 @@ namespace Rasterizer
         public readonly ComputeBuffer uvBuffer;
         public readonly ComputeBuffer triIndexBuffer;
         public readonly ComputeBuffer varyingsBuffer;
-
+        public readonly ComputeBuffer shadowVaryingsBuffer;
+        
         public readonly int triangleNum;
         public readonly int vertexNum;
         
@@ -40,6 +41,7 @@ namespace Rasterizer
             triIndexBuffer.SetData(triangles);
 
             varyingsBuffer = new ComputeBuffer(vertexNum, 15 * sizeof(float));
+            shadowVaryingsBuffer = new ComputeBuffer(vertexNum, 4 * sizeof(float));
         }
 
         public void Release()
@@ -49,6 +51,7 @@ namespace Rasterizer
             uvBuffer.Release();
             triIndexBuffer.Release();
             varyingsBuffer.Release();
+            shadowVaryingsBuffer.Release();
         }
     }
 }

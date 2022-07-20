@@ -10,6 +10,11 @@ struct Varyings
     float2 uv;
 };
 
+struct ShadowVaryings
+{
+    float4 positionCS;
+};
+
 //Inputs:
 //parameters:
 float4 _ClearColor;
@@ -17,6 +22,8 @@ int2 _ScreenSize;
 float4x4 _MatrixMVP;
 float4x4 _MatrixM;
 float4x4 _MatrixM_IT; //Invert and transpose model matrix
+float4x4 _MatrixLightMVP;
+
 
 float3 _CameraWS;
 float3 _LightDirWS;
@@ -33,6 +40,8 @@ StructuredBuffer<uint3> _TriIndexBuffer;
 
 //outputs:
 RWStructuredBuffer<Varyings> _VaryingsBuffer;
+RWStructuredBuffer<ShadowVaryings> _ShadowVaryingsBuffer;
+
 RWTexture2D<float4> _ColorTexture;
 RWTexture2D<uint> _DepthTexture;
 
@@ -151,4 +160,39 @@ void Rasterization(uint3 idx, float4 v[3])
     }
     
 }
+
+void ShadowRasterization(uint3 idx, float4 v[3])
+{
+    float4 v0 = v[0], v1 = v[1], v2 = v[2];
+    float2 pointLB, pointRT;
+    
+    pointLB = min(v0.xy, min(v1.xy, v2.xy));
+    pointRT = max(v0.xy, max(v1.xy, v2.xy));
+
+    uint2 screenLB = clamp(floor(pointLB), uint2(0, 0), _ScreenSize);
+    uint2 screenRT = clamp(ceil(pointRT), uint2(0, 0), _ScreenSize);
+    
+    const float EPSILON = -0.0005f;
+
+    for(uint y = screenLB.y; y < screenRT.y; ++y)
+    {
+        for(uint x = screenLB.x; x < screenRT.x; ++x)
+        {
+            float3 c = Get2DBarycentric(x, y, v);
+            float alpha = c.x, beta = c.y, gamma = c.z;
+            if(alpha < EPSILON || beta < EPSILON || gamma < EPSILON)
+            {
+                continue;
+            }
+
+            float z = 1.0f / (alpha / v0.w + beta / v1.w + gamma / v2.w);
+            float zp = (alpha * v0.z / v0.w + beta * v1.z / v1.w + gamma * v2.z / v2.w) * z;
+            
+            uint preDepth;
+            uint curDepth = asuint(zp);
+            InterlockedMax(_ShadowMapTexture[uint2(x, y)], curDepth, preDepth);
+        }
+    }
+}
+
 #endif

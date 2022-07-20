@@ -36,18 +36,22 @@ namespace Rasterizer
             Render();
         }
 
-        // private Camera CreateLightCamera()
-        // {
-        //     GameObject lightCameraGO = new GameObject("Directional Light Camera")
-        //     {
-        //         transform = {  }
-        //     };
-        // }
+        private void CreateLightCamera()
+        {
+            GameObject lightGO = m_MainLight.gameObject;
+            m_LightCamera = lightGO.AddComponent<Camera>();
+            m_LightCamera.orthographic = true;
+            m_LightCamera.orthographicSize = 6f;
+            m_LightCamera.nearClipPlane = m_Camera.nearClipPlane;
+            m_LightCamera.farClipPlane = m_Camera.farClipPlane;
+            m_LightCamera.enabled = false;
+        }
         
         private void Initialize()
         {
             m_Camera = GetComponent<Camera>();
-            
+            CreateLightCamera();
+
             //set render objects:
             m_RenderObjects.Clear();
             GameObject[] rootRenderObjs = this.gameObject.scene.GetRootGameObjects();
@@ -82,8 +86,7 @@ namespace Rasterizer
             m_Rasterizer.Clear();
 
             //set vertex attributes
-            m_Rasterizer.SetCamera(m_Camera);
-            m_Rasterizer.SetUniforms(m_MainLight);
+            m_Rasterizer.SetUniforms(m_Camera, m_LightCamera, m_MainLight);
 
             //For every object => drawcall
             foreach (RenderObject obj in m_RenderObjects)
@@ -119,7 +122,7 @@ namespace Rasterizer
         private void OnDestroy()
         {
             m_Rasterizer.Release();
-            
+            Destroy(m_LightCamera);
         }
     }
 }

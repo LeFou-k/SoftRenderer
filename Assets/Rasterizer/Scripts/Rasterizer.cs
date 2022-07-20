@@ -49,9 +49,13 @@ namespace Rasterizer
         //matrices:
         private Matrix4x4 m_MatrixView;
         private Matrix4x4 m_MatrixProj;
+        private Matrix4x4 m_MatrixLightView;
+        private Matrix4x4 m_MatrixLightProj;
+        
         private Matrix4x4 m_MatrixModel;
         private Matrix4x4 m_MatrixModelIT;
         private Matrix4x4 m_MatrixMVP;
+        private Matrix4x4 m_MatrixLightMVP;
 
         public delegate void UpdateDelegate(int vertices, int triangles);
         public UpdateDelegate updateDelegate;
@@ -63,6 +67,9 @@ namespace Rasterizer
             public static int vertexKernel;
             public static int rasterizeKernel;
 
+            public static int ShadowMapVertexKernel;
+            public static int ShadowMapRasterizeKernel;
+            
             //shader ids:
             public static readonly int clearColorId = Shader.PropertyToID("_ClearColor");
             public static readonly int screenSizeId = Shader.PropertyToID("_ScreenSize");
@@ -82,7 +89,10 @@ namespace Rasterizer
             public static readonly int depthTextureId = Shader.PropertyToID("_DepthTexture");
             public static readonly int uvTextureId = Shader.PropertyToID("_UVTexture");
 
+            public static readonly int matrixLightMVPId = Shader.PropertyToID("_MatrixLightMVP");
+            public static readonly int shadowVaryingsId = Shader.PropertyToID("_ShadowVaryingsBuffer");
             public static readonly int shadowMapTextureId = Shader.PropertyToID("_ShadowMapTexture");
+            
         }
 
         public Rasterizer(int w, int h, RasterizerSettings settings)
@@ -117,6 +127,9 @@ namespace Rasterizer
             Properties.clearKernel = m_RasterizeCS.FindKernel("ClearScreen");
             Properties.vertexKernel = m_RasterizeCS.FindKernel("VertexTransform");
             Properties.rasterizeKernel = m_RasterizeCS.FindKernel("RasterizeTriangles");
+            
+            Properties.ShadowMapVertexKernel = m_RasterizeCS.FindKernel("ShadowMapVertexTransform");
+            Properties.ShadowMapRasterizeKernel = m_RasterizeCS.FindKernel("ShadowMapRasterize");
         }
 
         public void Clear()
@@ -131,17 +144,12 @@ namespace Rasterizer
             
             triangles  = vertices = 0;
         }
-
-        public void SetCamera(Camera camera)
+        
+        
+        public void SetUniforms(Camera camera, Camera lightCamera, Light mainLight)
         {
             Vector3 cameraPos = camera.transform.position;
             m_RasterizeCS.SetFloats(Properties.cameraWSId, cameraPos.x, cameraPos.y, -cameraPos.z);   
-            RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
-        }
-        
-        public void SetUniforms(Light mainLight)
-        {
-            
             //lightDir: z = -z to right hand, -lightDir from shading point to light
             Vector3 lightDir = mainLight.transform.forward;
             m_RasterizeCS.SetFloats(Properties.lightDirWSId, -lightDir.x, -lightDir.y, lightDir.z);
@@ -154,18 +162,38 @@ namespace Rasterizer
             
             m_RasterizeCS.SetInts(Properties.screenSizeId, width, height);
             
+            RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
+            
+            //set light 
+            RasterizeUtils.SetViewProjectionMatrix(lightCamera, aspect, out m_MatrixLightView, out m_MatrixLightProj);
+
         }
 
         public void DrawCall(RenderObject renderObject)
         {
-            Mesh mesh = renderObject.mesh;
+            
             m_MatrixModel = renderObject.GetModelMatrix();
             m_MatrixModelIT = m_MatrixModel.inverse.transpose;
             m_MatrixMVP = m_MatrixProj * m_MatrixView * m_MatrixModel;
-
+            m_MatrixLightMVP = m_MatrixLightProj * m_MatrixLightView * m_MatrixModel;
+            
             var data = renderObject.renderObjectData;
             vertices += data.vertexNum;
             triangles += data.triangleNum;
+            
+            Profiler.BeginSample("Shadow Vertex transformation");
+            m_RasterizeCS.SetMatrix(Properties.matrixLightMVPId, m_MatrixLightMVP);
+            m_RasterizeCS.SetBuffer(Properties.ShadowMapVertexKernel, Properties.vertexBufferId, data.vertexBuffer);
+            m_RasterizeCS.SetBuffer(Properties.ShadowMapVertexKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
+            m_RasterizeCS.Dispatch(Properties.ShadowMapVertexKernel, Mathf.CeilToInt(data.vertexNum * 1.0f / 16), 1, 1);
+            Profiler.EndSample();
+            
+            Profiler.BeginSample("Shadow Rasterization");
+            m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.triIndexBufferId, data.triIndexBuffer);
+            m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
+            m_RasterizeCS.SetTexture(Properties.ShadowMapRasterizeKernel, Properties.shadowMapTextureId, shadowMapTexture);
+            m_RasterizeCS.Dispatch(Properties.ShadowMapRasterizeKernel, Mathf.CeilToInt(triangles / 16.0f), 1, 1);
+            Profiler.EndSample();
             
             Profiler.BeginSample("Vertex transformation");
             m_RasterizeCS.SetMatrix(Properties.matrixMVPId, m_MatrixMVP);
@@ -181,9 +209,9 @@ namespace Rasterizer
             Profiler.BeginSample("Rasterization");
             m_RasterizeCS.SetBuffer(Properties.rasterizeKernel, Properties.triIndexBufferId, data.triIndexBuffer);
             m_RasterizeCS.SetBuffer(Properties.rasterizeKernel, Properties.varyingsBufferId, data.varyingsBuffer);
+            m_RasterizeCS.SetBuffer(Properties.rasterizeKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.colorTextureId, colorTexture);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.depthTextureId, depthTexture);
-            m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.shadowMapTextureId, shadowMapTexture);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.uvTextureId, renderObject.texture);
             m_RasterizeCS.Dispatch(Properties.rasterizeKernel, Mathf.CeilToInt(triangles / 16.0f), 1, 1);
             Profiler.EndSample();
