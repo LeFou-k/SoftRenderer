@@ -52,7 +52,7 @@ float4 FragmentPhong(Varyings varyings)
     float3 halfDir = normalize(viewDir + _LightDirWS);
 
     float NoH = dot(halfDir, varyings.normalWS);
-    float4 specular = ks * _LightColor * pow(saturate(NoH), 15);
+    float4 specular = ks * _LightColor * pow(saturate(NoH), 20);
 
     return saturate(_AmbientColor + diffuse + specular);
     // return specular; 
