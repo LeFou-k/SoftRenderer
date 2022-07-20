@@ -90,7 +90,7 @@ namespace Rasterizer
             };
             m_ColorTexture.Create();
 
-            m_DepthTexture = new RenderTexture(w, h, 0, RenderTextureFormat.RFloat)
+            m_DepthTexture = new RenderTexture(w, h, 0, RenderTextureFormat.RG32)
             {
                 enableRandomWrite = true,
                 filterMode = FilterMode.Point
@@ -136,7 +136,7 @@ namespace Rasterizer
             m_RasterizeCS.SetInts(Properties.screenSizeId, width, height);
             
             RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
-            
+
         }
 
         public void DrawCall(RenderObject renderObject)

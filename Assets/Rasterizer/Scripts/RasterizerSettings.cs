@@ -9,24 +9,16 @@ namespace Rasterizer
         public Color ClearColor = Color.black;
         public Color AmbientColorr = Color.black;
         
-        [Header("Rasterizer Settings")]
-        public bool FrustumCulling = true;
-        public bool BackFaceCulling = true;
-        public BufferOutput _BufferOutput = BufferOutput.Color;
-        public MSAALevel _MSAALevel = MSAALevel.Disabled;
+        // [Header("Rasterizer Settings")]
+        // public bool FrustumCulling = true;
+        // public bool BackFaceCulling = true;
+        // public BufferOutput _BufferOutput = BufferOutput.Color;
+        //
+        // public enum BufferOutput
+        // {
+        //     Color,
+        //     Depth
+        // }
         
-        
-        public enum BufferOutput
-        {
-            Color,
-            Depth
-        }
-        
-        public enum MSAALevel
-        {
-            Disabled,
-            x2 = 2,
-            x4 = 4
-        }
     }
 }
