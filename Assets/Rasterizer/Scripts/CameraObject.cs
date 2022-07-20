@@ -65,7 +65,7 @@ namespace Rasterizer
         {
             Profiler.BeginSample("Rendering per frame");
             
-            rawImage.gameObject.SetActive(true);
+            // rawImage.gameObject.SetActive(true);
             
             //clear screen
             m_Rasterizer.Clear();

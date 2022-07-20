@@ -85,7 +85,7 @@ namespace Rasterizer
             rotationMat.SetColumn(2, cameraZ);
             
             Matrix4x4 translateMat = Matrix4x4.identity;
-            translateMat.SetColumn(3, new Vector4(-eyePosition.x, -eyePosition.y, -eyePosition.z));
+            translateMat.SetColumn(3, new Vector4(-eyePosition.x, -eyePosition.y, -eyePosition.z, 1f));
 
             return rotationMat.transpose * translateMat;
         }

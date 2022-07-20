@@ -38,7 +38,6 @@ namespace Rasterizer
 
         public int vertices;
         public int triangles;
-        public int trianglesVis;
 
         //matrices:
         private Matrix4x4 m_MatrixView;
@@ -96,7 +95,6 @@ namespace Rasterizer
                 enableRandomWrite = true,
                 filterMode = FilterMode.Point
             };
-            
             m_DepthTexture.Create();
 
             m_Settings = settings;
@@ -116,27 +114,27 @@ namespace Rasterizer
             m_RasterizeCS.Dispatch(Properties.clearKernel, Mathf.CeilToInt(width / 8f), Mathf.CeilToInt(height / 8f),
                 1);
             
-            triangles = trianglesVis = vertices = 0;
+            triangles  = vertices = 0;
         }
 
         public void SetAttributes(Camera camera, Light mainLight)
         {
             
             Vector3 cameraPos = camera.transform.position;
-            cameraPos.z *= -1;
-            m_RasterizeCS.SetFloats(Properties.cameraWSId, cameraPos.x, cameraPos.y, cameraPos.z);
+            m_RasterizeCS.SetFloats(Properties.cameraWSId, cameraPos.x, cameraPos.y, -cameraPos.z);
 
+            //lightDir: z = -z to right hand, -lightDir from shading point to light
             Vector3 lightDir = mainLight.transform.forward;
-            lightDir.z *= -1;
-            m_RasterizeCS.SetFloats(Properties.lightDirWSId, lightDir.x, lightDir.y, lightDir.z);
+            m_RasterizeCS.SetFloats(Properties.lightDirWSId, -lightDir.x, -lightDir.y, lightDir.z);
 
-            Color lightColor = mainLight.color;
-            m_RasterizeCS.SetFloats(Properties.lightColorId, lightColor.r, lightColor.g, lightColor.b);
+            Color lightColor = mainLight.color * mainLight.intensity;
+            m_RasterizeCS.SetFloats(Properties.lightColorId, lightColor.r, lightColor.g, lightColor.b, lightColor.a);
 
             Color ambientColor = m_Settings.AmbientColorr;
-            m_RasterizeCS.SetFloats(Properties.ambientColorId, ambientColor.r, ambientColor.g, ambientColor.b);
+            m_RasterizeCS.SetFloats(Properties.ambientColorId, ambientColor.r, ambientColor.g, ambientColor.b, ambientColor.a);
             
             m_RasterizeCS.SetInts(Properties.screenSizeId, width, height);
+            
             RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
             
         }

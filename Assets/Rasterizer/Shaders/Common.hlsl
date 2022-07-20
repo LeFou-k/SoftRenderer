@@ -130,9 +130,14 @@ void Rasterization(uint3 idx, float4 v[3])
 
                 //Debug Vertex Transform:
                 // _ColorTexture[uint2(x, y)] = float4(0.8f, 0.2f, 0.3f, 1.0f);
-                _ColorTexture[uint2(x, y)] = float4(normalP * 0.5f + 0.5f, 1.0f);
+                // _ColorTexture[uint2(x, y)] = float4(normalP, 1.0f);
+                // _ColorTexture[uint2(x, y)] = float4(worldNormalP, 1.0f);
+
+                // _ColorTexture[uint2(x, y)] = float4(worldNormalP * 0.5f + 0.5f, 1.0f);
                 // _ColorTexture[uint2(x, y)] = float4(varyings.uv, 0.0f, 1.0f);
-                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
+                // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
+                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
             }
         }
     }

@@ -17,7 +17,7 @@ void VertexTransform(uint3 id : SV_DispatchThreadID)
 {
     //Transform to right hand coordinate:
     float4 positionOS = float4(_VertexBuffer[id.x].xy, -_VertexBuffer[id.x].z, 1.0f);
-    float3 normalOS = _NormalBuffer[id.x].xyz;
+    float3 normalOS = float3(_NormalBuffer[id.x].x, _NormalBuffer[id.y].y, -_NormalBuffer[id.z].z);
 
     _VaryingsBuffer[id.x].positionCS = mul(_MatrixMVP, positionOS);
     _VaryingsBuffer[id.x].positionWS = mul(_MatrixM, positionOS).xyz;
@@ -59,7 +59,7 @@ void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
     {
         float4 vec = v[k];
         vec.xy = (vec.xy + float2(1.0f, 1.0f)) * 0.5f * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
-        vec.z = vec.z * 0.5 + 0.5; //z value to linear01Z
+        vec.z = vec.z * 0.5f + 0.5f;
 
         v[k] = vec;
     }
