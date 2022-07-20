@@ -18,11 +18,6 @@ namespace Rasterizer
         private int frameCount;
         private float timeCost;
 
-        public void Awake()
-        {
-            
-        }
-
         public void Start()
         {
             frameCount = 0;
