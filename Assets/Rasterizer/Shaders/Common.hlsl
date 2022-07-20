@@ -23,6 +23,7 @@ float4x4 _MatrixMVP;
 float4x4 _MatrixM;
 float4x4 _MatrixM_IT; //Invert and transpose model matrix
 float4x4 _MatrixLightMVP;
+float4x4 _MatrixLightVP;
 
 
 float3 _CameraWS;
@@ -94,6 +95,21 @@ float3 Get2DBarycentric(float x, float y, float4 v[3])
     return float3(c1, c2, c3);
 }
 
+float GetHardShadow(float3 positionWS)
+{
+    float4 positionCS = mul(_MatrixLightVP, float4(positionWS, 1.0f));
+    positionCS.xyz /= positionCS.w;
+    positionCS.xy = (positionCS.xy + float2(1.0f, 1.0f)) * 0.5f * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+    positionCS.z = positionCS.z * 0.5f + 0.5f;
+    
+    uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
+    uint occluDepth = _ShadowMapTexture[uv];
+    uint curDepth = asuint(positionCS.z);
+
+    return step(occluDepth, curDepth);
+    
+}
+
 void Rasterization(uint3 idx, float4 v[3])
 {
     float4 v0 = v[0], v1 = v[1], v2 = v[2];
@@ -122,9 +138,12 @@ void Rasterization(uint3 idx, float4 v[3])
                 continue;
             }
 
+            //Project correction: z in camera space
             float z = 1.0f / (alpha / v0.w + beta / v1.w + gamma / v2.w);
             float zp = (alpha * v0.z / v0.w + beta * v1.z / v1.w + gamma * v2.z / v2.w) * z;
-
+            
+            
+            //calculate depth in light view spac
             uint preDepth;
             uint curDepth = asuint(zp);
             InterlockedMax(_DepthTexture[uint2(x, y)], curDepth, preDepth);
@@ -153,8 +172,22 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(_DepthTexture[uint2(x, y)]);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(curDepth);
-                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+
+                float4 positionCS = mul(_MatrixLightVP, float4(worldPosP, 1.0f));
+                positionCS.xyz /= positionCS.w;
+                positionCS.xy = (positionCS.xy + float2(1.0f, 1.0f)) * 0.5f * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+                positionCS.z = positionCS.z * 0.5f + 0.5f;
+    
+                uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
+                uint occluDepth = _ShadowMapTexture[uv];
+                uint curDepth = asuint(positionCS.z);
                 
+                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings) * GetHardShadow(varyings.positionWS);
+                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                // float depth = asfloat(occluDepth);
+                float depth = asfloat(_DepthTexture[uint2(x, y)]);
+                // _ColorTexture[uint2(x, y)] = float4(depth, depth, depth, 1.0f);
+                // _ColorTexture[uint2(x, y)] = float4(worldNormalP, 1.0f);
             }
         }
     }
@@ -191,6 +224,11 @@ void ShadowRasterization(uint3 idx, float4 v[3])
             uint preDepth;
             uint curDepth = asuint(zp);
             InterlockedMax(_ShadowMapTexture[uint2(x, y)], curDepth, preDepth);
+            // if(curDepth > preDepth)
+            // {
+            //     float c = asfloat(_ShadowMapTexture[uint2(x, y)]);
+            //     _ColorTexture[uint2(x, y)] = float4(c, c, c, 1.0f);
+            // }
         }
     }
 }

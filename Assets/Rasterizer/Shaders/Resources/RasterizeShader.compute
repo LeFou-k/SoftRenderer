@@ -39,7 +39,6 @@ void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
                     _VaryingsBuffer[triIdx.z].positionCS
     };
     
-    
     //view frustum clipping
     if(FrustumClipping(v))
     {
@@ -64,11 +63,12 @@ void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
         float4 vec = v[k];
         vec.xy = (vec.xy + float2(1.0f, 1.0f)) * 0.5f * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
         vec.z = vec.z * 0.5f + 0.5f;
-
         v[k] = vec;
+        
     }
     
     Rasterization(triIdx, v);
+    
 }
 
 [numthreads(16, 1, 1)]
