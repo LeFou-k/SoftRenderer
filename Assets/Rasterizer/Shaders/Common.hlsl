@@ -80,7 +80,9 @@ float4 FragmentPhong(Varyings varyings)
     float NoH = dot(halfDir, varyings.normalWS);
     float4 specular = ks * _LightColor * pow(saturate(NoH), 50);
 
-    return saturate(_AmbientColor + (diffuse + specular) * GetHardShadow(varyings.positionWS));
+    // return saturate(_AmbientColor + (diffuse + specular) * GetHardShadow(varyings.positionWS));
+    return saturate(_AmbientColor + (diffuse + specular));
+
     // return specular; 
     // return _AmbientColor;
     // return diffuse;
@@ -173,17 +175,19 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(_DepthTexture[uint2(x, y)]);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(curDepth);
-                
+
+                //TODO: positionCS transform z is wrong!
                 float4 positionCS = mul(_MatrixLightVP, float4(varyings.positionWS, 1.0f));
-                positionCS = positionCS * 0.5f + 0.5f;
-                positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
-    
-                uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
-                uint occluDepth = _ShadowMapTexture[uv];
-                uint depth = asuint(positionCS.z);
+                // positionCS = positionCS * 0.5f + 0.5f;
+                // positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+                uint depth = _ShadowMapTexture[uint2(positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1))];
+
+                //Why positionCS.z is 0.98f?
+                float res = step(0.98f, positionCS.z);
+                // _ColorTexture[uint2(x, y)] = float4(res, 0.0f, 0.f, 1.0f);
                 
+                // _ColorTexture[uint2(x, y)] = float4(0.f, asfloat(curDepth), 0.f, 1.0f);
                 _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
-                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
                 // _ColorTexture[uint2(x,y)] = asfloat(curDepth);
             }
         }
@@ -217,14 +221,8 @@ void ShadowRasterization(float4 v[3])
 
             float zp = alpha * v0.z + beta * v1.z + gamma * v2.z;
             
-            uint preDepth;
             uint curDepth = asuint(zp);
-            InterlockedMax(_ShadowMapTexture[uint2(x, y)], curDepth, preDepth);
-            // if(curDepth > preDepth)
-            // {
-            //     float c = asfloat(_ShadowMapTexture[uint2(x, y)]);
-            //     _ColorTexture[uint2(x, y)] = float4(c, c, c, 1.0f);
-            // }
+            InterlockedMax(_ShadowMapTexture[uint2(x, y)], curDepth);
         }
     }
 }

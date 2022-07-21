@@ -75,7 +75,7 @@ void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
 [numthreads(16, 1, 1)]
 void ShadowMapVertexTransform(uint3 id : SV_DispatchThreadID)
 {
-    float4 positionOS = float4(_VertexBuffer[id.x].xy, -_VertexBuffer[id.x].z, 1.0);
+    float4 positionOS = float4(_VertexBuffer[id.x].xy, -_VertexBuffer[id.x].z, 1.0f);
     _ShadowVaryingsBuffer[id.x].positionCS = mul(_MatrixLightMVP, positionOS);
 }
 
@@ -108,7 +108,6 @@ void ShadowMapRasterize(uint3 id : SV_DispatchThreadID)
         float4 vec = v[k];
         vec = vec * 0.5f + 0.5f;
         vec.xy = vec.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
-
         v[k] = vec;
     }
 

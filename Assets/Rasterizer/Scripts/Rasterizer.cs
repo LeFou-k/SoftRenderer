@@ -178,6 +178,7 @@ namespace Rasterizer
             m_MatrixModel = renderObject.GetModelMatrix();
             m_MatrixModelIT = m_MatrixModel.inverse.transpose;
             m_MatrixMVP = m_MatrixProj * m_MatrixView * m_MatrixModel;
+            
             m_MatrixLightMVP = m_MatrixLightProj * m_MatrixLightView * m_MatrixModel;
             m_MatrixLightVP = m_MatrixLightProj * m_MatrixLightView;
             
@@ -201,7 +202,6 @@ namespace Rasterizer
             m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.triIndexBufferId, data.triIndexBuffer);
             m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
             m_RasterizeCS.SetTexture(Properties.ShadowMapRasterizeKernel, Properties.shadowMapTextureId, shadowMapTexture);
-            m_RasterizeCS.SetTexture(Properties.ShadowMapRasterizeKernel, Properties.colorTextureId, colorTexture);
             m_RasterizeCS.Dispatch(Properties.ShadowMapRasterizeKernel, Mathf.CeilToInt(triangles / 16.0f), 1, 1);
             Profiler.EndSample();
             
