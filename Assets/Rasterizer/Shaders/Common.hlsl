@@ -179,15 +179,15 @@ void Rasterization(uint3 idx, float4 v[3])
 
                 //Why positionCS.z is 0.98f?]
                 //positionCS.z is in [0.97, 0.98f)? why?
-                float res = step(0.96f, positionCS.z);
+                // float res = step(0.96f, positionCS.z);
                 // float d = asfloat(depth);
-                float d = positionCS.z;
-                _ColorTexture[uint2(x, y)] = float4(res, 0.0f, 0.f, 1.0f);
+                float d = (positionCS.z);
+                // _ColorTexture[uint2(x, y)] = float4(res, 0.0f, 0.f, 1.0f);
                 
                 // _ColorTexture[uint2(x, y)] = float4(asfloat(curDepth), asfloat(curDepth), asfloat(curDepth), 1.0f);
                 // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
                 // _ColorTexture[uint2(x, y)] = float4(res, 0.f, 0.f, 1.f);
-                // _ColorTexture[uint2(x, y)] = float4(d, d, d, 1.0f);
+                _ColorTexture[uint2(x, y)] = float4(d, d, d, 1.0f);
                 // _ColorTexture[uint2(x,y)] = asfloat(curDepth);
             }
         }
