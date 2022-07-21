@@ -93,8 +93,8 @@ namespace Rasterizer
             public static readonly int matrixLightMVPId = Shader.PropertyToID("_MatrixLightMVP");
             public static readonly int matrixLightVPId = Shader.PropertyToID("_MatrixLightVP");
             public static readonly int shadowVaryingsId = Shader.PropertyToID("_ShadowVaryingsBuffer");
+            public static readonly int rwShadowMapTextureId = Shader.PropertyToID("_RWShadowMapTexture");
             public static readonly int shadowMapTextureId = Shader.PropertyToID("_ShadowMapTexture");
-            
         }
 
         public Rasterizer(int w, int h, RasterizerSettings settings)
@@ -139,7 +139,7 @@ namespace Rasterizer
         {
             m_RasterizeCS.SetTexture(Properties.clearKernel, Properties.colorTextureId, colorTexture);
             m_RasterizeCS.SetTexture(Properties.clearKernel, Properties.depthTextureId, depthTexture);
-            m_RasterizeCS.SetTexture(Properties.clearKernel, Properties.shadowMapTextureId, shadowMapTexture);
+            m_RasterizeCS.SetTexture(Properties.clearKernel, Properties.rwShadowMapTextureId, shadowMapTexture);
             var clearColor = m_Settings.ClearColor;
             m_RasterizeCS.SetFloats(Properties.clearColorId, clearColor.r, clearColor.g, clearColor.b, clearColor.a);
             m_RasterizeCS.Dispatch(Properties.clearKernel, Mathf.CeilToInt(width / 16f), Mathf.CeilToInt(height / 16f),
@@ -200,7 +200,7 @@ namespace Rasterizer
             Profiler.BeginSample("Shadow Rasterization");
             m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.triIndexBufferId, data.triIndexBuffer);
             m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
-            m_RasterizeCS.SetTexture(Properties.ShadowMapRasterizeKernel, Properties.shadowMapTextureId, shadowMapTexture);
+            m_RasterizeCS.SetTexture(Properties.ShadowMapRasterizeKernel, Properties.rwShadowMapTextureId, shadowMapTexture);
             m_RasterizeCS.Dispatch(Properties.ShadowMapRasterizeKernel, Mathf.CeilToInt(triangles / 512.0f), 1, 1);
             Profiler.EndSample();
             

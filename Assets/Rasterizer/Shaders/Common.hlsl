@@ -46,7 +46,9 @@ RWStructuredBuffer<ShadowVaryings> _ShadowVaryingsBuffer;
 RWTexture2D<float4> _ColorTexture;
 RWTexture2D<uint> _DepthTexture;
 
-RWTexture2D<uint> _ShadowMapTexture;
+RWTexture2D<uint> _RWShadowMapTexture;
+
+Texture2D<float> _ShadowMapTexture;
 SamplerState sampler_ShadowMapTexture;
 
 //textures:
@@ -57,14 +59,11 @@ float GetHardShadow(float3 positionWS)
 {
     float4 positionCS = mul(_MatrixLightVP, float4(positionWS, 1.0f));
     positionCS = positionCS * 0.5f + 0.5f;
-    positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
-    
-    uint2 uv = clamp(ceil(positionCS.xy), uint2(0, 0), _ScreenSize);
-    float occluDepth = asfloat(_ShadowMapTexture[uv]);
-    float curDepth = positionCS.z;
 
-    return step(occluDepth, curDepth);
+    float occluDepth = _ShadowMapTexture.SampleLevel(sampler_ShadowMapTexture, positionCS.xy, 0);
+    float curDepth = positionCS.z;
     
+    return step(occluDepth, curDepth + 0.01f);
 }
 
 //Fragment Shader:
@@ -74,7 +73,7 @@ float4 FragmentPhong(Varyings varyings)
     float4 ks = float4(0.7937f, 0.7937f, 0.7937f, 1.0f);
 
     float NoL = dot(varyings.normalWS, _LightDirWS);
-    float4 diffuse = textureColor * _LightColor * saturate(NoL);
+    float4 diffuse = 1.0f * _LightColor * saturate(NoL);
     float3 viewDir = normalize(_CameraWS - varyings.positionWS);
     float3 halfDir = normalize(viewDir + _LightDirWS);
 
@@ -82,7 +81,7 @@ float4 FragmentPhong(Varyings varyings)
     float4 specular = ks * _LightColor * pow(saturate(NoH), 50);
 
     return saturate(_AmbientColor + (diffuse + specular) * GetHardShadow(varyings.positionWS));
-    // return saturate(_AmbientColor + (diffuse + specular));
+    return saturate(_AmbientColor + (diffuse + specular));
     
 }
 
@@ -171,24 +170,20 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(_DepthTexture[uint2(x, y)]);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(curDepth);
-
                 
                 float4 positionCS = mul(_MatrixLightVP, float4(varyings.positionWS, 1.0f));
                 positionCS = positionCS * 0.5f + 0.5f;
-                uint depth = _ShadowMapTexture[uint2(positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1))];
-
-                //Why positionCS.z is 0.98f?]
-                //positionCS.z is in [0.97, 0.98f)? why?
-                // float res = step(0.96f, positionCS.z);
-                // float d = asfloat(depth);
-                float d = (positionCS.z);
-                // _ColorTexture[uint2(x, y)] = float4(res, 0.0f, 0.f, 1.0f);
-                
-                // _ColorTexture[uint2(x, y)] = float4(asfloat(curDepth), asfloat(curDepth), asfloat(curDepth), 1.0f);
-                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
-                // _ColorTexture[uint2(x, y)] = float4(res, 0.f, 0.f, 1.f);
-                _ColorTexture[uint2(x, y)] = float4(d, d, d, 1.0f);
-                // _ColorTexture[uint2(x,y)] = asfloat(curDepth);
+                positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+    
+                uint2 uv = clamp(ceil(positionCS.xy), uint2(0, 0), _ScreenSize);
+                // float occluDepth = asfloat(_ShadowMapTexture[uv]);
+                uint occluDepth = _RWShadowMapTexture[uv];
+                // float curDepth = positionCS.z;
+                uint curDepth = asuint(positionCS.z);
+                bool isVisible = occluDepth < curDepth;
+                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                // _ColorTexture[uint2(x, y)] = float4(asfloat(occluDepth), 0.0f, 0.0f, 1.0f);
+                // _ColorTexture[uint2(x, y)] = float4(positionCS.z, positionCS.z, positionCS.z, 1.f);
             }
         }
     }
@@ -222,7 +217,7 @@ void ShadowRasterization(float4 v[3])
             float zp = alpha * v0.z + beta * v1.z + gamma * v2.z;
             
             uint curDepth = asuint(zp);
-            InterlockedMax(_ShadowMapTexture[uint2(x, y)], curDepth);
+            InterlockedMax(_RWShadowMapTexture[uint2(x, y)], curDepth);
         }
     }
 }

@@ -11,7 +11,7 @@ void ClearScreen(uint3 id : SV_DispatchThreadID)
 {
     _ColorTexture[id.xy] = _ClearColor;
     _DepthTexture[id.xy] = 0;
-    _ShadowMapTexture[id.xy] = 0;
+    _RWShadowMapTexture[id.xy] = 0;
 }
 
 //Vertex shader:
@@ -108,8 +108,8 @@ void ShadowMapRasterize(uint3 id : SV_DispatchThreadID)
     for(int k = 0; k < 3; ++k)
     {
         float4 vec = v[k];
-        vec = vec * 0.5f + 0.5f;
-        vec.xy = vec.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+        vec.xy = (vec.xy + float2(1.0f, 1.0f)) * 0.5f * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+        vec.z = vec.z * 0.5f + 0.5f;
         v[k] = vec;
     }
 

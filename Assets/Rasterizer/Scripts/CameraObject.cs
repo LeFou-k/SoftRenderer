@@ -43,7 +43,7 @@ namespace Rasterizer
             m_LightCamera.orthographic = true;
             m_LightCamera.orthographicSize = 8f;
             m_LightCamera.nearClipPlane = m_Camera.nearClipPlane;
-            m_LightCamera.farClipPlane = m_Camera.farClipPlane;
+            m_LightCamera.farClipPlane = 34.0f;
             m_LightCamera.enabled = false;
         }
         
