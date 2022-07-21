@@ -98,9 +98,8 @@ float3 Get2DBarycentric(float x, float y, float4 v[3])
 float GetHardShadow(float3 positionWS)
 {
     float4 positionCS = mul(_MatrixLightVP, float4(positionWS, 1.0f));
-    positionCS.xyz /= positionCS.w;
-    positionCS.xy = (positionCS.xy + float2(1.0f, 1.0f)) * 0.5f * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
-    positionCS.z = positionCS.z * 0.5f + 0.5f;
+    positionCS = positionCS * 0.5f + 0.5f;
+    positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
     
     uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
     uint occluDepth = _ShadowMapTexture[uv];
@@ -172,18 +171,10 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(_DepthTexture[uint2(x, y)]);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(curDepth);
-
-                float4 positionCS = mul(_MatrixLightVP, float4(worldPosP, 1.0f));
-                positionCS.xyz /= positionCS.w;
-                positionCS.xy = (positionCS.xy + float2(1.0f, 1.0f)) * 0.5f * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
-                positionCS.z = positionCS.z * 0.5f + 0.5f;
-    
-                uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
-                uint occluDepth = _ShadowMapTexture[uv];
-                uint curDepth = asuint(positionCS.z);
                 
-                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings) * GetHardShadow(varyings.positionWS);
-                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                
+                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings) * GetHardShadow(varyings.positionWS);
+                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
                 // float depth = asfloat(occluDepth);
                 float depth = asfloat(_DepthTexture[uint2(x, y)]);
                 // _ColorTexture[uint2(x, y)] = float4(depth, depth, depth, 1.0f);

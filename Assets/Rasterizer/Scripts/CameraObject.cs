@@ -110,9 +110,7 @@ namespace Rasterizer
                     rawImage.texture = m_Rasterizer.colorTexture;
                     break;
             }
-            
-            // rawImage.texture = m_Rasterizer.colorTexture;
-            
+
             m_Rasterizer.UpdateFrame();
             
             Profiler.EndSample();

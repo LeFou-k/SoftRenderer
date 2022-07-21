@@ -205,7 +205,6 @@ namespace Rasterizer
             Profiler.EndSample();
             
             Profiler.BeginSample("Vertex transformation");
-            
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.vertexBufferId, data.vertexBuffer);
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.normalBufferId, data.normalBuffer);
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.uvBufferId, data.uvBuffer);
