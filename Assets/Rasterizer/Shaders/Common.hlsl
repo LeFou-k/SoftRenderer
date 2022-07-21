@@ -52,6 +52,20 @@ RWTexture2D<uint> _ShadowMapTexture;
 Texture2D<float4> _UVTexture;
 SamplerState sampler_UVTexture;
 
+float GetHardShadow(float3 positionWS)
+{
+    float4 positionCS = mul(_MatrixLightVP, float4(positionWS, 1.0f));
+    positionCS = positionCS * 0.5f + 0.5f;
+    positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+    
+    uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
+    uint occluDepth = asuint(_ShadowMapTexture[uv]);
+    uint curDepth = asuint(positionCS.z);
+
+    return step(occluDepth, curDepth);
+    
+}
+
 //Fragment Shader:
 float4 FragmentPhong(Varyings varyings)
 {
@@ -66,7 +80,7 @@ float4 FragmentPhong(Varyings varyings)
     float NoH = dot(halfDir, varyings.normalWS);
     float4 specular = ks * _LightColor * pow(saturate(NoH), 50);
 
-    return saturate(_AmbientColor + diffuse + specular);
+    return saturate(_AmbientColor + (diffuse + specular) * GetHardShadow(varyings.positionWS));
     // return specular; 
     // return _AmbientColor;
     // return diffuse;
@@ -95,19 +109,7 @@ float3 Get2DBarycentric(float x, float y, float4 v[3])
     return float3(c1, c2, c3);
 }
 
-float GetHardShadow(float3 positionWS)
-{
-    float4 positionCS = mul(_MatrixLightVP, float4(positionWS, 1.0f));
-    positionCS = positionCS * 0.5f + 0.5f;
-    positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
-    
-    uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
-    uint occluDepth = _ShadowMapTexture[uv];
-    uint curDepth = asuint(positionCS.z);
 
-    return step(occluDepth, curDepth);
-    
-}
 
 void Rasterization(uint3 idx, float4 v[3])
 {
@@ -180,16 +182,16 @@ void Rasterization(uint3 idx, float4 v[3])
                 uint occluDepth = _ShadowMapTexture[uv];
                 uint depth = asuint(positionCS.z);
                 
-                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings) * GetHardShadow(varyings.positionWS);
+                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
                 // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
-                _ColorTexture[uint2(x,y)] = asfloat(curDepth);
+                // _ColorTexture[uint2(x,y)] = asfloat(curDepth);
             }
         }
     }
     
 }
 
-void ShadowRasterization(uint3 idx, float4 v[3])
+void ShadowRasterization(float4 v[3])
 {
     float4 v0 = v[0], v1 = v[1], v2 = v[2];
     float2 pointLB, pointRT;
@@ -212,9 +214,6 @@ void ShadowRasterization(uint3 idx, float4 v[3])
             {
                 continue;
             }
-
-            // float z = 1.0f / (alpha / v0.w + beta / v1.w + gamma / v2.w);
-            // float zp = (alpha * v0.z / v0.w + beta * v1.z / v1.w + gamma * v2.z / v2.w) * z;
 
             float zp = alpha * v0.z + beta * v1.z + gamma * v2.z;
             

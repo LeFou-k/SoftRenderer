@@ -112,5 +112,5 @@ void ShadowMapRasterize(uint3 id : SV_DispatchThreadID)
         v[k] = vec;
     }
 
-    ShadowRasterization(triIdx, v);
+    ShadowRasterization(v);
 }

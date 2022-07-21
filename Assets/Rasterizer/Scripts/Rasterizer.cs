@@ -122,6 +122,7 @@ namespace Rasterizer
                 enableRandomWrite = true,
                 filterMode = FilterMode.Point
             };
+            m_ShadowMapTexture.Create();
 
             m_Settings = settings;
 
