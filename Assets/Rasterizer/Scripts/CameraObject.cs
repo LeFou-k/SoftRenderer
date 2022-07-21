@@ -89,7 +89,15 @@ namespace Rasterizer
             m_Rasterizer.SetUniforms(m_Camera, m_LightCamera, m_MainLight);
 
             //For every object => drawcall
-            foreach (RenderObject obj in m_RenderObjects)
+            foreach (var obj in m_RenderObjects)
+            {
+                if (obj.gameObject.activeInHierarchy)
+                {
+                    m_Rasterizer.DrawShadowMap(obj);
+                }
+            }
+
+            foreach (var obj in m_RenderObjects)
             {
                 if (obj.gameObject.activeInHierarchy)
                 {

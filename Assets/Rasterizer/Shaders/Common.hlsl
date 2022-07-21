@@ -66,6 +66,11 @@ float GetHardShadow(float3 positionWS)
     return step(occluDepth, curDepth + 0.01f);
 }
 
+float GetSoftShadow(float3 positionWS)
+{
+    float2 texelSize = rcp(float2(_ScreenSize));
+    
+}
 //Fragment Shader:
 float4 FragmentPhong(Varyings varyings)
 {
