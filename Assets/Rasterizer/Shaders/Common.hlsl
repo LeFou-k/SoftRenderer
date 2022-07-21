@@ -55,22 +55,57 @@ SamplerState sampler_ShadowMapTexture;
 Texture2D<float4> _UVTexture;
 SamplerState sampler_UVTexture;
 
-float GetHardShadow(float3 positionWS)
+#define PI 3.1415926f
+#define SHADOW_BIAS 0.01f
+//possion Disk for soft shadow
+const float uPossionDisk[8] = {
+    -0.94201624, -0.39906216,
+    0.94558609, -0.76890725,
+    -0.094184101, -0.92938870,
+    0.34495938, 0.29387760
+};
+
+float VisibleCompare(float2 uv, float curDepth)
+{
+    float occluDepth = _ShadowMapTexture.SampleLevel(sampler_ShadowMapTexture, uv, 0);
+    return step(occluDepth, curDepth + SHADOW_BIAS);
+}
+
+float4 WorldPos2LightClipPos(float3 positionWS)
 {
     float4 positionCS = mul(_MatrixLightVP, float4(positionWS, 1.0f));
     positionCS = positionCS * 0.5f + 0.5f;
 
-    float occluDepth = _ShadowMapTexture.SampleLevel(sampler_ShadowMapTexture, positionCS.xy, 0);
-    float curDepth = positionCS.z;
-    
-    return step(occluDepth, curDepth + 0.01f);
+    return positionCS;
+}
+
+float GetHardShadow(float3 positionWS)
+{
+    float4 positionCS = WorldPos2LightClipPos(positionWS);
+    return VisibleCompare(positionCS.xy, positionCS.z);
 }
 
 float GetSoftShadow(float3 positionWS)
 {
+    float4 positionCS = WorldPos2LightClipPos(positionWS);
     float2 texelSize = rcp(float2(_ScreenSize));
-    
+    float result = 0.0;
+    const int KERNEL = 2;
+    // for(int i = 0; i < 4; ++i)
+    // {
+    //     // result += VisibleCompare(positionCS.xy + float2(uPossionDisk[i * 2], uPossionDisk[i * 2 + 1]) * texelSize, positionCS.z);
+    //     result += VisibleCompare(positionCS.xy + float2(dir[i], dir[i + 1]) * texelSize, positionCS.z);
+    // }
+    for(int i = -KERNEL; i < KERNEL; ++i)
+    {
+        for(int j = -KERNEL; j < KERNEL; ++j)
+        {
+            result += VisibleCompare(positionCS.xy + float2(i, j) * texelSize, positionCS.z);
+        }
+    }
+    return result * rcp(float(KERNEL * KERNEL * 4));
 }
+
 //Fragment Shader:
 float4 FragmentPhong(Varyings varyings)
 {
@@ -78,14 +113,14 @@ float4 FragmentPhong(Varyings varyings)
     float4 ks = float4(0.7937f, 0.7937f, 0.7937f, 1.0f);
 
     float NoL = dot(varyings.normalWS, _LightDirWS);
-    float4 diffuse = 1.0f * _LightColor * saturate(NoL);
+    float4 diffuse = textureColor * _LightColor * saturate(NoL);
     float3 viewDir = normalize(_CameraWS - varyings.positionWS);
     float3 halfDir = normalize(viewDir + _LightDirWS);
 
     float NoH = dot(halfDir, varyings.normalWS);
     float4 specular = ks * _LightColor * pow(saturate(NoH), 50);
 
-    return saturate(_AmbientColor + (diffuse + specular) * GetHardShadow(varyings.positionWS));
+    return saturate(_AmbientColor + (diffuse + specular) * GetSoftShadow(varyings.positionWS));
     return saturate(_AmbientColor + (diffuse + specular));
     
 }
@@ -163,32 +198,7 @@ void Rasterization(uint3 idx, float4 v[3])
                 varyings.positionWS = worldPosP;
                 varyings.normalWS = worldNormalP;
                 
-                //Debug Vertex Transform:
-                // _ColorTexture[uint2(x, y)] = float4(0.8f, 0.2f, 0.3f, 1.0f);
-                // _ColorTexture[uint2(x, y)] = float4(normalP, 1.0f);
-                // _ColorTexture[uint2(x, y)] = float4(normalP * 0.5 + 0.5, 1.0f);
-
-                // _ColorTexture[uint2(x, y)] = float4(worldNormalP, 1.0f);
-
-                // _ColorTexture[uint2(x, y)] = float4(worldNormalP * 0.5f + 0.5f, 1.0f);
-                // _ColorTexture[uint2(x, y)] = float4(varyings.uv, 0.0f, 1.0f);
-                // _ColorTexture[uint2(x, y)] = float4(zp, zp, zp, 1.0f);
-                // _ShadowMapTexture[uint2(x, y)].r = asfloat(_DepthTexture[uint2(x, y)]);
-                // _ShadowMapTexture[uint2(x, y)].r = asfloat(curDepth);
-                
-                float4 positionCS = mul(_MatrixLightVP, float4(varyings.positionWS, 1.0f));
-                positionCS = positionCS * 0.5f + 0.5f;
-                positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
-    
-                uint2 uv = clamp(ceil(positionCS.xy), uint2(0, 0), _ScreenSize);
-                // float occluDepth = asfloat(_ShadowMapTexture[uv]);
-                uint occluDepth = _RWShadowMapTexture[uv];
-                // float curDepth = positionCS.z;
-                uint curDepth = asuint(positionCS.z);
-                bool isVisible = occluDepth < curDepth;
                 _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
-                // _ColorTexture[uint2(x, y)] = float4(asfloat(occluDepth), 0.0f, 0.0f, 1.0f);
-                // _ColorTexture[uint2(x, y)] = float4(positionCS.z, positionCS.z, positionCS.z, 1.f);
             }
         }
     }
