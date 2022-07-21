@@ -462,7 +462,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c548d7543e465a04fa59a44dfc248aab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  texture: {fileID: 0}
+  texture: {fileID: 10309, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!64 &594635486
 MeshCollider:
   m_ObjectHideFlags: 0
