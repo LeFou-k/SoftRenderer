@@ -172,13 +172,17 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(_DepthTexture[uint2(x, y)]);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(curDepth);
                 
+                float4 positionCS = mul(_MatrixLightVP, float4(varyings.positionWS, 1.0f));
+                positionCS = positionCS * 0.5f + 0.5f;
+                positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+    
+                uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
+                uint occluDepth = _ShadowMapTexture[uv];
+                uint depth = asuint(positionCS.z);
                 
-                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings) * GetHardShadow(varyings.positionWS);
+                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings) * GetHardShadow(varyings.positionWS);
                 // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
-                // float depth = asfloat(occluDepth);
-                float depth = asfloat(_DepthTexture[uint2(x, y)]);
-                // _ColorTexture[uint2(x, y)] = float4(depth, depth, depth, 1.0f);
-                // _ColorTexture[uint2(x, y)] = float4(worldNormalP, 1.0f);
+                _ColorTexture[uint2(x,y)] = asfloat(curDepth);
             }
         }
     }
