@@ -140,6 +140,7 @@ namespace Rasterizer
             up.z *= -1;
 
             viewMatrix = GetViewMatrix(cameraPos, lookAt, up);
+            //orthographic projection matrix has nothing to do with camera transform
             if (camera.orthographic)
             {
                 float halfHeight = camera.orthographicSize;

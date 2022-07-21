@@ -41,7 +41,7 @@ namespace Rasterizer
             GameObject lightGO = m_MainLight.gameObject;
             m_LightCamera = lightGO.AddComponent<Camera>();
             m_LightCamera.orthographic = true;
-            m_LightCamera.orthographicSize = 6f;
+            m_LightCamera.orthographicSize = 8f;
             m_LightCamera.nearClipPlane = m_Camera.nearClipPlane;
             m_LightCamera.farClipPlane = m_Camera.farClipPlane;
             m_LightCamera.enabled = false;

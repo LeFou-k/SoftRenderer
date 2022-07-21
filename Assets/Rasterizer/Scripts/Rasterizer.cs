@@ -165,11 +165,10 @@ namespace Rasterizer
             
             m_RasterizeCS.SetInts(Properties.screenSizeId, width, height);
             
+            //get camera view and projection matrix
             RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
-            
-            //set light 
+            //get light camera view and projection matrix
             RasterizeUtils.SetViewProjectionMatrix(lightCamera, aspect, out m_MatrixLightView, out m_MatrixLightProj);
-            
         }
 
         public void DrawCall(RenderObject renderObject)
@@ -190,19 +189,19 @@ namespace Rasterizer
             m_RasterizeCS.SetMatrix(Properties.matrixMId, m_MatrixModel);
             m_RasterizeCS.SetMatrix(Properties.matrixMITId, m_MatrixModelIT);
             m_RasterizeCS.SetMatrix(Properties.matrixLightVPId, m_MatrixLightVP);
-            
-            Profiler.BeginSample("Shadow Vertex transformation");
             m_RasterizeCS.SetMatrix(Properties.matrixLightMVPId, m_MatrixLightMVP);
+
+            Profiler.BeginSample("Shadow Vertex transformation");
             m_RasterizeCS.SetBuffer(Properties.ShadowMapVertexKernel, Properties.vertexBufferId, data.vertexBuffer);
             m_RasterizeCS.SetBuffer(Properties.ShadowMapVertexKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
-            m_RasterizeCS.Dispatch(Properties.ShadowMapVertexKernel, Mathf.CeilToInt(data.vertexNum * 1.0f / 16), 1, 1);
+            m_RasterizeCS.Dispatch(Properties.ShadowMapVertexKernel, Mathf.CeilToInt(data.vertexNum / 512.0f), 1, 1);
             Profiler.EndSample();
             
             Profiler.BeginSample("Shadow Rasterization");
             m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.triIndexBufferId, data.triIndexBuffer);
             m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
             m_RasterizeCS.SetTexture(Properties.ShadowMapRasterizeKernel, Properties.shadowMapTextureId, shadowMapTexture);
-            m_RasterizeCS.Dispatch(Properties.ShadowMapRasterizeKernel, Mathf.CeilToInt(triangles / 16.0f), 1, 1);
+            m_RasterizeCS.Dispatch(Properties.ShadowMapRasterizeKernel, Mathf.CeilToInt(triangles / 512.0f), 1, 1);
             Profiler.EndSample();
             
             Profiler.BeginSample("Vertex transformation");
@@ -210,7 +209,7 @@ namespace Rasterizer
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.normalBufferId, data.normalBuffer);
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.uvBufferId, data.uvBuffer);
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.varyingsBufferId, data.varyingsBuffer);
-            m_RasterizeCS.Dispatch(Properties.vertexKernel, Mathf.CeilToInt(data.vertexNum * 1.0f / 16), 1, 1);
+            m_RasterizeCS.Dispatch(Properties.vertexKernel, Mathf.CeilToInt(data.vertexNum / 512.0f), 1, 1);
             Profiler.EndSample();
             //
             Profiler.BeginSample("Rasterization");
@@ -220,7 +219,7 @@ namespace Rasterizer
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.depthTextureId, depthTexture);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.shadowMapTextureId, shadowMapTexture);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.uvTextureId, renderObject.texture);
-            m_RasterizeCS.Dispatch(Properties.rasterizeKernel, Mathf.CeilToInt(triangles / 16.0f), 1, 1);
+            m_RasterizeCS.Dispatch(Properties.rasterizeKernel, Mathf.CeilToInt(triangles / 512.0f), 1, 1);
             Profiler.EndSample();
             
         }

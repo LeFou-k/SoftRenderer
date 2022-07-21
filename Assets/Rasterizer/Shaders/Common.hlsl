@@ -47,6 +47,7 @@ RWTexture2D<float4> _ColorTexture;
 RWTexture2D<uint> _DepthTexture;
 
 RWTexture2D<uint> _ShadowMapTexture;
+SamplerState sampler_ShadowMapTexture;
 
 //textures:
 Texture2D<float4> _UVTexture;
@@ -58,9 +59,9 @@ float GetHardShadow(float3 positionWS)
     positionCS = positionCS * 0.5f + 0.5f;
     positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
     
-    uint2 uv = clamp(positionCS.xy, uint2(0, 0), _ScreenSize);
-    uint occluDepth = asuint(_ShadowMapTexture[uv]);
-    uint curDepth = asuint(positionCS.z);
+    uint2 uv = clamp(ceil(positionCS.xy), uint2(0, 0), _ScreenSize);
+    float occluDepth = asfloat(_ShadowMapTexture[uv]);
+    float curDepth = positionCS.z;
 
     return step(occluDepth, curDepth);
     
@@ -80,12 +81,9 @@ float4 FragmentPhong(Varyings varyings)
     float NoH = dot(halfDir, varyings.normalWS);
     float4 specular = ks * _LightColor * pow(saturate(NoH), 50);
 
-    // return saturate(_AmbientColor + (diffuse + specular) * GetHardShadow(varyings.positionWS));
-    return saturate(_AmbientColor + (diffuse + specular));
-
-    // return specular; 
-    // return _AmbientColor;
-    // return diffuse;
+    return saturate(_AmbientColor + (diffuse + specular) * GetHardShadow(varyings.positionWS));
+    // return saturate(_AmbientColor + (diffuse + specular));
+    
 }
 
 bool FrustumClipping(float4 v[3])
@@ -110,8 +108,6 @@ float3 Get2DBarycentric(float x, float y, float4 v[3])
     float c3 = (x * (v[0].y - v[1].y) + (v[1].x - v[0].x) * y + v[0].x * v[1].y - v[1].x * v[0].y) / (v[2].x * (v[0].y - v[1].y) + (v[1].x - v[0].x) * v[2].y + v[0].x * v[1].y - v[1].x * v[0].y);                        
     return float3(c1, c2, c3);
 }
-
-
 
 void Rasterization(uint3 idx, float4 v[3])
 {
@@ -176,18 +172,22 @@ void Rasterization(uint3 idx, float4 v[3])
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(_DepthTexture[uint2(x, y)]);
                 // _ShadowMapTexture[uint2(x, y)].r = asfloat(curDepth);
 
-                //TODO: positionCS transform z is wrong!
+                
                 float4 positionCS = mul(_MatrixLightVP, float4(varyings.positionWS, 1.0f));
-                // positionCS = positionCS * 0.5f + 0.5f;
-                // positionCS.xy = positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1);
+                positionCS = positionCS * 0.5f + 0.5f;
                 uint depth = _ShadowMapTexture[uint2(positionCS.xy * float2(_ScreenSize.x - 1, _ScreenSize.y - 1))];
 
-                //Why positionCS.z is 0.98f?
-                float res = step(0.98f, positionCS.z);
-                // _ColorTexture[uint2(x, y)] = float4(res, 0.0f, 0.f, 1.0f);
+                //Why positionCS.z is 0.98f?]
+                //positionCS.z is in [0.97, 0.98f)? why?
+                float res = step(0.96f, positionCS.z);
+                // float d = asfloat(depth);
+                float d = positionCS.z;
+                _ColorTexture[uint2(x, y)] = float4(res, 0.0f, 0.f, 1.0f);
                 
-                // _ColorTexture[uint2(x, y)] = float4(0.f, asfloat(curDepth), 0.f, 1.0f);
-                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                // _ColorTexture[uint2(x, y)] = float4(asfloat(curDepth), asfloat(curDepth), asfloat(curDepth), 1.0f);
+                // _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                // _ColorTexture[uint2(x, y)] = float4(res, 0.f, 0.f, 1.f);
+                // _ColorTexture[uint2(x, y)] = float4(d, d, d, 1.0f);
                 // _ColorTexture[uint2(x,y)] = asfloat(curDepth);
             }
         }

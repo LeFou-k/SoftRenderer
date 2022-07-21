@@ -15,7 +15,7 @@ void ClearScreen(uint3 id : SV_DispatchThreadID)
 }
 
 //Vertex shader:
-[numthreads(16, 1, 1)]
+[numthreads(512, 1, 1)]
 void VertexTransform(uint3 id : SV_DispatchThreadID)
 {
     //Transform to right hand coordinate:
@@ -30,7 +30,7 @@ void VertexTransform(uint3 id : SV_DispatchThreadID)
     
 }
 
-[numthreads(16, 1, 1)]
+[numthreads(512, 1, 1)]
 void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
 {
     uint3 triIdx = _TriIndexBuffer[id.x];
@@ -72,14 +72,14 @@ void RasterizeTriangles(uint3 id : SV_DispatchThreadID)
 }
 
 //TODO: Ortho projection
-[numthreads(16, 1, 1)]
+[numthreads(512, 1, 1)]
 void ShadowMapVertexTransform(uint3 id : SV_DispatchThreadID)
 {
     float4 positionOS = float4(_VertexBuffer[id.x].xy, -_VertexBuffer[id.x].z, 1.0f);
     _ShadowVaryingsBuffer[id.x].positionCS = mul(_MatrixLightMVP, positionOS);
 }
 
-[numthreads(16, 1, 1)]
+[numthreads(512, 1, 1)]
 void ShadowMapRasterize(uint3 id : SV_DispatchThreadID)
 {
     uint3 triIdx = _TriIndexBuffer[id.x];
@@ -93,6 +93,8 @@ void ShadowMapRasterize(uint3 id : SV_DispatchThreadID)
     //     return;
     // }
     
+    //positionCS already in NDC space
+
     // v[0] /= v[0].w;
     // v[1] /= v[1].w;
     // v[2] /= v[2].w;
@@ -102,7 +104,7 @@ void ShadowMapRasterize(uint3 id : SV_DispatchThreadID)
     float3 crossVal = cross(edge01, edge02);
     
     if(crossVal.z < 0) return;
-    
+
     for(int k = 0; k < 3; ++k)
     {
         float4 vec = v[k];
