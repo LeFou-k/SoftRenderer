@@ -60,10 +60,43 @@ SamplerState sampler_UVTexture;
 
 //possion Disk for soft shadow
 
+static const float2 poissonDisk[16] = { 
+    float2( -0.94201624, -0.39906216 ), 
+    float2( 0.94558609, -0.76890725 ), 
+    float2( -0.094184101, -0.92938870 ), 
+    float2( 0.34495938, 0.29387760 ), 
+    float2( -0.91588581, 0.45771432 ), 
+    float2( -0.81544232, -0.87912464 ), 
+    float2( -0.38277543, 0.27676845 ), 
+    float2( 0.97484398, 0.75648379 ), 
+    float2( 0.44323325, -0.97511554 ), 
+    float2( 0.53742981, -0.47373420 ), 
+    float2( -0.26496911, -0.41893023 ), 
+    float2( 0.79197514, 0.19090188 ), 
+    float2( -0.24188840, 0.99706507 ), 
+    float2( -0.81409955, 0.91437590 ), 
+    float2( 0.19984126, 0.78641367 ), 
+    float2( 0.14383161, -0.14100790 ) 
+};
+
+static const float2 texelSize = rcp(float2(_ScreenSize));
+
+float random(float3 seed, int i)
+{
+    float4 seed4 = float4(seed, i);
+    float dotProduct = dot(seed4, float4(12.9898,78.233,45.164,94.673));
+    return frac(sin(dotProduct) * 43758.5453);
+}
 
 float VisibleCompare(float2 uv, float curDepth)
 {
     float occluDepth = _ShadowMapTexture.SampleLevel(sampler_ShadowMapTexture, uv, 0);
+    return step(occluDepth, curDepth + SHADOW_BIAS);
+}
+
+float VisibleCompare(float2 uv, float curDepth, out float occluDepth)
+{
+    occluDepth = _ShadowMapTexture.SampleLevel(sampler_ShadowMapTexture, uv, 0);
     return step(occluDepth, curDepth + SHADOW_BIAS);
 }
 
@@ -75,81 +108,60 @@ float4 WorldPos2LightClipPos(float3 positionWS)
     return positionCS;
 }
 
+float GetOccluDepth(float3 positionCS)
+{
+    const int radius = 20;
+    const int BLOCK_SEARCH_SAMPLES = 16;
+    int flag = 0;
+    float cnt = 0.f, avgDepth = 0.f;
+    for(int i = 0; i < BLOCK_SEARCH_SAMPLES; ++i)
+    {
+        float2 sampleCoord = float2(radius, radius) * poissonDisk[i] * texelSize + positionCS.xy;
+        float d;
+        float vis = VisibleCompare(sampleCoord.xy, positionCS.z, d);
+        if(vis > 0.f)
+        {
+            cnt += 1.0f;
+            flag = 1;
+            avgDepth += d;
+        }
+    }
+
+    return lerp(1.0f, avgDepth / cnt, flag);
+}
+
 float GetHardShadow(float3 positionWS)
 {
     float4 positionCS = WorldPos2LightClipPos(positionWS);
     return VisibleCompare(positionCS.xy, positionCS.z);
 }
 
-float GetPCFByKernelConv(float3 positionCS)
+float GetPCF(float3 positionCS, float radius)
 {
-    float result = 0.0;
-    const int KERNEL = 5;
-    float2 texelSize = rcp(float2(_ScreenSize));
-    for(int i = -KERNEL / 2; i < KERNEL / 2; ++i)
+    const int SAMPLES = 16;
+    float vis = 0.f;
+    for(int i = 0; i < SAMPLES; ++i)
     {
-        for(int j = -KERNEL / 2; j < KERNEL / 2; ++j)
-        {
-            result += VisibleCompare(positionCS.xy + float2(i, j) * texelSize, positionCS.z);
-        }
+        float2 sampleCoord = float2(radius, radius) * poissonDisk[i] * texelSize + positionCS.xy;
+        vis += VisibleCompare(sampleCoord, positionCS.z);
     }
 
-    return result * rcp(float(KERNEL * KERNEL));
+    return vis * rcp(SAMPLES);
 }
 
-float random(float3 seed, int i)
+float GetPCSS(float3 positionCS)
 {
-    float4 seed4 = float4(seed, i);
-    float dotProduct = dot(seed4, float4(12.9898,78.233,45.164,94.673));
-    return frac(sin(dotProduct) * 43758.5453);
+    float avgOccluDepth = GetOccluDepth(positionCS);
+    const float lightWidth = 50.f;
+    float radius = max(positionCS.z - avgOccluDepth, 0.f) / avgOccluDepth * lightWidth;
+    return GetPCF(positionCS, radius);
 }
-
-float GetPCFByPossionDisk(float3 positionCS)
-{
-    const float2 poissonDisk[16] = { 
-        float2( -0.94201624, -0.39906216 ), 
-        float2( 0.94558609, -0.76890725 ), 
-        float2( -0.094184101, -0.92938870 ), 
-        float2( 0.34495938, 0.29387760 ), 
-        float2( -0.91588581, 0.45771432 ), 
-        float2( -0.81544232, -0.87912464 ), 
-        float2( -0.38277543, 0.27676845 ), 
-        float2( 0.97484398, 0.75648379 ), 
-        float2( 0.44323325, -0.97511554 ), 
-        float2( 0.53742981, -0.47373420 ), 
-        float2( -0.26496911, -0.41893023 ), 
-        float2( 0.79197514, 0.19090188 ), 
-        float2( -0.24188840, 0.99706507 ), 
-        float2( -0.81409955, 0.91437590 ), 
-        float2( 0.19984126, 0.78641367 ), 
-        float2( 0.14383161, -0.14100790 ) 
-    };
-    
-    float result = 0.f;
-    int iterates = 4;
-    for(int i = 0; i < iterates; ++i)
-    {
-        // result += VisibleCompare(positionCS.xy + float2(uPossionDisk[i * 2], uPossionDisk[i * 2 + 1]) * texelSize, positionCS.z);
-        float angle = 2.0 * PI * random(floor(positionCS.xyz * 1000.0), i);
-        float s = sin(angle), c = cos(angle);
-        
-        float2x2 rotateM = {
-            c, s,
-            -s, c
-        };
-        float2 rotatedOffset = mul(rotateM, poissonDisk[i]);
-        float size = (_ScreenSize.x + _ScreenSize.y) * 0.5f;
-        result += VisibleCompare(positionCS.xy + rotatedOffset * rcp(size), positionCS.z);
-        
-    }
-    return result * rcp(float(iterates));
-}
-
 float GetSoftShadow(float3 positionWS)
 {
     float4 positionCS = WorldPos2LightClipPos(positionWS);
-    // return GetPCFByKernelConv(positionCS);
-    return GetPCFByPossionDisk(positionCS);
+    return GetPCF(positionCS, 2);
+    // return GetPCSS(positionCS);
+    // return GetOccluDepth(positionCS);
 }
 
 //Fragment Shader:
