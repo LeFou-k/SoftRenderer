@@ -25,11 +25,16 @@ float4x4 _MatrixM_IT; //Invert and transpose model matrix
 float4x4 _MatrixLightMVP;
 float4x4 _MatrixLightVP;
 
-
 float3 _CameraWS;
 float3 _LightDirWS;
 float4 _LightColor;
 float4 _AmbientColor;
+
+//PBR Parameters:
+float3 albedo;
+float metallic;
+float roughness;
+float ao;
 
 //buffers:
 StructuredBuffer<float3> _VertexBuffer;

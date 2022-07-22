@@ -53,7 +53,7 @@ void Rasterization(uint3 idx, float4 v[3])
                 varyings.positionWS = worldPosP;
                 varyings.normalWS = worldNormalP;
                 
-                _ColorTexture[uint2(x, y)] = FragmentPhong(varyings);
+                _ColorTexture[uint2(x, y)] = Shadings(varyings);
             }
         }
     }

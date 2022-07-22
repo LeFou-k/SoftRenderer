@@ -97,6 +97,11 @@ namespace Rasterizer
             public static readonly int shadowVaryingsId = Shader.PropertyToID("_ShadowVaryingsBuffer");
             public static readonly int rwShadowMapTextureId = Shader.PropertyToID("_RWShadowMapTexture");
             public static readonly int shadowMapTextureId = Shader.PropertyToID("_ShadowMapTexture");
+
+            public static readonly int albedoId = Shader.PropertyToID("albedo");
+            public static readonly int metallicId = Shader.PropertyToID("metallic");
+            public static readonly int roughnessId = Shader.PropertyToID("roughness");
+            public static readonly int aoId = Shader.PropertyToID("ao");
         }
 
         public Rasterizer(int w, int h, RasterizerSettings settings)
@@ -171,6 +176,7 @@ namespace Rasterizer
             RasterizeUtils.SetViewProjectionMatrix(camera, aspect, out m_MatrixView, out m_MatrixProj);
             //get light camera view and projection matrix
             RasterizeUtils.SetViewProjectionMatrix(lightCamera, aspect, out m_MatrixLightView, out m_MatrixLightProj);
+            
         }
 
         private void SetObjectParams(RenderObject renderObject)
@@ -187,6 +193,13 @@ namespace Rasterizer
             m_RasterizeCS.SetMatrix(Properties.matrixMITId, m_MatrixModelIT);
             m_RasterizeCS.SetMatrix(Properties.matrixLightVPId, m_MatrixLightVP);
             m_RasterizeCS.SetMatrix(Properties.matrixLightMVPId, m_MatrixLightMVP);
+            
+            //set PBR parameters:
+            Color albedo = renderObject._PbrSettings.albedo;
+            m_RasterizeCS.SetFloats(Properties.albedoId, albedo.r, albedo.g, albedo.b);
+            m_RasterizeCS.SetFloat(Properties.metallicId, renderObject._PbrSettings.metallic);
+            m_RasterizeCS.SetFloat(Properties.roughnessId, renderObject._PbrSettings.roughness);
+            m_RasterizeCS.SetFloat(Properties.aoId, renderObject._PbrSettings.ao);
             
         }
 
@@ -240,6 +253,7 @@ namespace Rasterizer
                 Shader.DisableKeyword("PBR");
             }
             
+
             SetObjectParams(renderObject);
             var data = renderObject.renderObjectData;
             

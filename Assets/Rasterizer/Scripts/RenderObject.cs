@@ -19,6 +19,20 @@ namespace Rasterizer
             BlinPhong,
             PBR
         }
+
+        public PBRSettings _PbrSettings;
+        [Serializable]
+        public class PBRSettings
+        {
+            public Color albedo = Color.white;
+            [Range(0.0f, 1.0f)]
+            public float metallic = 0.0f;
+            [Range(0.0f, 1.0f)]
+            public float roughness = 1.0f;
+            [Range(0.0f, 1.0f)]
+            public float ao = 1.0f;
+        }
+        
         private void Start()
         {
             Initialize();
