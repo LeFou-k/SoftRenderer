@@ -4,7 +4,10 @@
 #pragma kernel ShadowMapVertexTransform
 #pragma kernel ShadowMapRasterize
 
-#include "../Common.hlsl"
+#pragma multi_compile BLIN_PHONG PBR
+
+
+#include "../Rasterization.hlsl"
 
 [numthreads(16, 16, 1)]
 void ClearScreen(uint3 id : SV_DispatchThreadID)

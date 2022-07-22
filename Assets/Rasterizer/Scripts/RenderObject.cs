@@ -12,6 +12,13 @@ namespace Rasterizer
         public Texture2D texture;
 
         public RenderObjectData renderObjectData;
+
+        public ShadingType _ShadingType = ShadingType.BlinPhong;
+        public enum ShadingType
+        {
+            BlinPhong,
+            PBR
+        }
         private void Start()
         {
             Initialize();

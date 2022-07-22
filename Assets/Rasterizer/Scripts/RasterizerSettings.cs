@@ -13,7 +13,7 @@ namespace Rasterizer
         // public bool FrustumCulling = true;
         // public bool BackFaceCulling = true;
         public BufferOutput _BufferOutput = BufferOutput.Color;
-        //
+
         public enum BufferOutput
         {
             Color,
