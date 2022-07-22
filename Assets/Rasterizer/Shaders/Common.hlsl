@@ -127,7 +127,11 @@ float GetOccluDepth(float3 positionCS)
         }
     }
 
-    return lerp(1.0f, avgDepth / cnt, flag);
+    if(flag == 1)
+    {
+        return avgDepth / cnt;
+    }
+    return 1.0f;
 }
 
 float GetHardShadow(float3 positionWS)
@@ -156,11 +160,12 @@ float GetPCSS(float3 positionCS)
     float radius = max(positionCS.z - avgOccluDepth, 0.f) / avgOccluDepth * lightWidth;
     return GetPCF(positionCS, radius);
 }
+
 float GetSoftShadow(float3 positionWS)
 {
     float4 positionCS = WorldPos2LightClipPos(positionWS);
-    return GetPCF(positionCS, 2);
-    // return GetPCSS(positionCS);
+    return GetPCF(positionCS.xyz, 4);
+    // return GetPCSS(positionCS.xyz);
     // return GetOccluDepth(positionCS);
 }
 

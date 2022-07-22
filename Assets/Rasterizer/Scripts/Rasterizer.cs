@@ -8,11 +8,12 @@ using UnityEngine.Rendering;
 
 namespace Rasterizer
 {
-    //Pipeline: => Clear screen
-    //          => Set Attributes
-    //          => Draw Every Objects
-    //          => Update Per frame
-    //          => Rendering done and release
+    // Pipeline: => Clear screen
+    //           => Set Attributes
+    //           => ShadowMap pass
+    //           => Rasterize pass
+    //           => Update Per frame
+    //           => Rendering done and release
 
     public class Rasterizer
     {
@@ -211,7 +212,7 @@ namespace Rasterizer
             vertices += data.vertexNum;
             triangles += data.triangleNum;
             
-            Profiler.BeginSample("Shadow Vertex transformation");
+            Profiler.BeginSample("Shadow Vertex Transformation");
             m_RasterizeCS.SetBuffer(Properties.shadowMapVertexKernel, Properties.vertexBufferId, data.vertexBuffer);
             m_RasterizeCS.SetBuffer(Properties.shadowMapVertexKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
             m_RasterizeCS.Dispatch(Properties.shadowMapVertexKernel, Mathf.CeilToInt(data.vertexNum / 512.0f), 1, 1);
