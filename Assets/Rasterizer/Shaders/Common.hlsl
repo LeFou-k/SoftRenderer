@@ -57,13 +57,9 @@ SamplerState sampler_UVTexture;
 
 #define PI 3.1415926f
 #define SHADOW_BIAS 0.01f
+
 //possion Disk for soft shadow
-const float uPossionDisk[8] = {
-    -0.94201624, -0.39906216,
-    0.94558609, -0.76890725,
-    -0.094184101, -0.92938870,
-    0.34495938, 0.29387760
-};
+
 
 float VisibleCompare(float2 uv, float curDepth)
 {
@@ -85,25 +81,75 @@ float GetHardShadow(float3 positionWS)
     return VisibleCompare(positionCS.xy, positionCS.z);
 }
 
-float GetSoftShadow(float3 positionWS)
+float GetPCFByKernelConv(float3 positionCS)
 {
-    float4 positionCS = WorldPos2LightClipPos(positionWS);
-    float2 texelSize = rcp(float2(_ScreenSize));
     float result = 0.0;
-    const int KERNEL = 2;
-    // for(int i = 0; i < 4; ++i)
-    // {
-    //     // result += VisibleCompare(positionCS.xy + float2(uPossionDisk[i * 2], uPossionDisk[i * 2 + 1]) * texelSize, positionCS.z);
-    //     result += VisibleCompare(positionCS.xy + float2(dir[i], dir[i + 1]) * texelSize, positionCS.z);
-    // }
-    for(int i = -KERNEL; i < KERNEL; ++i)
+    const int KERNEL = 5;
+    float2 texelSize = rcp(float2(_ScreenSize));
+    for(int i = -KERNEL / 2; i < KERNEL / 2; ++i)
     {
-        for(int j = -KERNEL; j < KERNEL; ++j)
+        for(int j = -KERNEL / 2; j < KERNEL / 2; ++j)
         {
             result += VisibleCompare(positionCS.xy + float2(i, j) * texelSize, positionCS.z);
         }
     }
-    return result * rcp(float(KERNEL * KERNEL * 4));
+
+    return result * rcp(float(KERNEL * KERNEL));
+}
+
+float random(float3 seed, int i)
+{
+    float4 seed4 = float4(seed, i);
+    float dotProduct = dot(seed4, float4(12.9898,78.233,45.164,94.673));
+    return frac(sin(dotProduct) * 43758.5453);
+}
+
+float GetPCFByPossionDisk(float3 positionCS)
+{
+    const float2 poissonDisk[16] = { 
+        float2( -0.94201624, -0.39906216 ), 
+        float2( 0.94558609, -0.76890725 ), 
+        float2( -0.094184101, -0.92938870 ), 
+        float2( 0.34495938, 0.29387760 ), 
+        float2( -0.91588581, 0.45771432 ), 
+        float2( -0.81544232, -0.87912464 ), 
+        float2( -0.38277543, 0.27676845 ), 
+        float2( 0.97484398, 0.75648379 ), 
+        float2( 0.44323325, -0.97511554 ), 
+        float2( 0.53742981, -0.47373420 ), 
+        float2( -0.26496911, -0.41893023 ), 
+        float2( 0.79197514, 0.19090188 ), 
+        float2( -0.24188840, 0.99706507 ), 
+        float2( -0.81409955, 0.91437590 ), 
+        float2( 0.19984126, 0.78641367 ), 
+        float2( 0.14383161, -0.14100790 ) 
+    };
+    
+    float result = 0.f;
+    int iterates = 4;
+    for(int i = 0; i < iterates; ++i)
+    {
+        // result += VisibleCompare(positionCS.xy + float2(uPossionDisk[i * 2], uPossionDisk[i * 2 + 1]) * texelSize, positionCS.z);
+        float angle = 2.0 * PI * random(floor(positionCS.xyz * 1000.0), i);
+        float s = sin(angle), c = cos(angle);
+        
+        float2x2 rotateM = {
+            c, s,
+            -s, c
+        };
+        float2 rotatedOffset = mul(rotateM, poissonDisk[i]);
+        float size = (_ScreenSize.x + _ScreenSize.y) * 0.5f;
+        result += VisibleCompare(positionCS.xy + rotatedOffset * rcp(size), positionCS.z);
+        
+    }
+    return result * rcp(float(iterates));
+}
+
+float GetSoftShadow(float3 positionWS)
+{
+    float4 positionCS = WorldPos2LightClipPos(positionWS);
+    // return GetPCFByKernelConv(positionCS);
+    return GetPCFByPossionDisk(positionCS);
 }
 
 //Fragment Shader:

@@ -88,22 +88,8 @@ namespace Rasterizer
             //set vertex attributes
             m_Rasterizer.SetUniforms(m_Camera, m_LightCamera, m_MainLight);
 
-            //For every object => drawcall
-            foreach (var obj in m_RenderObjects)
-            {
-                if (obj.gameObject.activeInHierarchy)
-                {
-                    m_Rasterizer.DrawShadowMap(obj);
-                }
-            }
-
-            foreach (var obj in m_RenderObjects)
-            {
-                if (obj.gameObject.activeInHierarchy)
-                {
-                    m_Rasterizer.DrawCall(obj);
-                }
-            }
+            //Drawcall
+            m_Rasterizer.DrawCall(m_RenderObjects);
             
             //show texture:
             switch (m_Settings._BufferOutput)

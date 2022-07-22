@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -68,8 +69,8 @@ namespace Rasterizer
             public static int vertexKernel;
             public static int rasterizeKernel;
 
-            public static int ShadowMapVertexKernel;
-            public static int ShadowMapRasterizeKernel;
+            public static int shadowMapVertexKernel;
+            public static int shadowMapRasterizeKernel;
             
             //shader ids:
             public static readonly int clearColorId = Shader.PropertyToID("_ClearColor");
@@ -131,8 +132,8 @@ namespace Rasterizer
             Properties.vertexKernel = m_RasterizeCS.FindKernel("VertexTransform");
             Properties.rasterizeKernel = m_RasterizeCS.FindKernel("RasterizeTriangles");
             
-            Properties.ShadowMapVertexKernel = m_RasterizeCS.FindKernel("ShadowMapVertexTransform");
-            Properties.ShadowMapRasterizeKernel = m_RasterizeCS.FindKernel("ShadowMapRasterize");
+            Properties.shadowMapVertexKernel = m_RasterizeCS.FindKernel("ShadowMapVertexTransform");
+            Properties.shadowMapRasterizeKernel = m_RasterizeCS.FindKernel("ShadowMapRasterize");
         }
 
         public void Clear()
@@ -187,7 +188,21 @@ namespace Rasterizer
             m_RasterizeCS.SetMatrix(Properties.matrixLightMVPId, m_MatrixLightMVP);
             
         }
-        public void DrawShadowMap(RenderObject renderObject)
+
+        public void DrawCall(List<RenderObject> renderObjects)
+        {
+            foreach (var rObj in renderObjects)
+            {
+                ShadowMapPass(rObj);
+            }
+
+            foreach (var rObj in renderObjects)
+            {
+                RasterizePass(rObj);
+            }
+        }
+        
+        private void ShadowMapPass(RenderObject renderObject)
         {
 
             SetObjectParams(renderObject);
@@ -197,20 +212,20 @@ namespace Rasterizer
             triangles += data.triangleNum;
             
             Profiler.BeginSample("Shadow Vertex transformation");
-            m_RasterizeCS.SetBuffer(Properties.ShadowMapVertexKernel, Properties.vertexBufferId, data.vertexBuffer);
-            m_RasterizeCS.SetBuffer(Properties.ShadowMapVertexKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
-            m_RasterizeCS.Dispatch(Properties.ShadowMapVertexKernel, Mathf.CeilToInt(data.vertexNum / 512.0f), 1, 1);
+            m_RasterizeCS.SetBuffer(Properties.shadowMapVertexKernel, Properties.vertexBufferId, data.vertexBuffer);
+            m_RasterizeCS.SetBuffer(Properties.shadowMapVertexKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
+            m_RasterizeCS.Dispatch(Properties.shadowMapVertexKernel, Mathf.CeilToInt(data.vertexNum / 512.0f), 1, 1);
             Profiler.EndSample();
             
             Profiler.BeginSample("Shadow Rasterization");
-            m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.triIndexBufferId, data.triIndexBuffer);
-            m_RasterizeCS.SetBuffer(Properties.ShadowMapRasterizeKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
-            m_RasterizeCS.SetTexture(Properties.ShadowMapRasterizeKernel, Properties.rwShadowMapTextureId, shadowMapTexture);
-            m_RasterizeCS.Dispatch(Properties.ShadowMapRasterizeKernel, Mathf.CeilToInt(triangles / 512.0f), 1, 1);
+            m_RasterizeCS.SetBuffer(Properties.shadowMapRasterizeKernel, Properties.triIndexBufferId, data.triIndexBuffer);
+            m_RasterizeCS.SetBuffer(Properties.shadowMapRasterizeKernel, Properties.shadowVaryingsId, data.shadowVaryingsBuffer);
+            m_RasterizeCS.SetTexture(Properties.shadowMapRasterizeKernel, Properties.rwShadowMapTextureId, shadowMapTexture);
+            m_RasterizeCS.Dispatch(Properties.shadowMapRasterizeKernel, Mathf.CeilToInt(triangles / 512.0f), 1, 1);
             Profiler.EndSample();
         }
         
-        public void DrawCall(RenderObject renderObject)
+        private void RasterizePass(RenderObject renderObject)
         {
             SetObjectParams(renderObject);
             var data = renderObject.renderObjectData;
