@@ -4,7 +4,7 @@
 #pragma kernel ShadowMapVertexTransform
 #pragma kernel ShadowMapRasterize
 
-#pragma multi_compile BLIN_PHONG PBR
+#pragma multi_compile BLIN_PHONG PBR PBR_TEXTURE
 
 
 #include "../Rasterization.hlsl"

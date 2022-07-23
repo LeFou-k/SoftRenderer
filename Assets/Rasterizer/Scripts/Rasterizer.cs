@@ -241,17 +241,26 @@ namespace Rasterizer
         
         private void RasterizePass(RenderObject renderObject)
         {
-            
-            if (renderObject._ShadingType == RenderObject.ShadingType.PBR)
+            switch (renderObject._ShadingType)
             {
-                Shader.DisableKeyword("BLIN_PHONG");
-                Shader.EnableKeyword("PBR");
+                case RenderObject.ShadingType.PBR:
+                    Shader.EnableKeyword("PBR");
+                    Shader.DisableKeyword("PBR_TEXTURE");
+                    Shader.DisableKeyword("BLIN_PHONG");
+                    break;
+                case RenderObject.ShadingType.PBRTexture:
+                    Shader.EnableKeyword("PBR_TEXTURE");
+                    Shader.DisableKeyword("PBR");
+                    Shader.DisableKeyword("BLIN_PHONG");
+                    break;
+                    
+                default:
+                    Shader.EnableKeyword("BLIN_PHONG");
+                    Shader.DisableKeyword("PBR");
+                    Shader.DisableKeyword("PBR_TEXTURE");
+                    break;
             }
-            else if (renderObject._ShadingType == RenderObject.ShadingType.BlinPhong)
-            {
-                Shader.EnableKeyword("BLIN_PHONG");
-                Shader.DisableKeyword("PBR");
-            }
+
             
 
             SetObjectParams(renderObject);

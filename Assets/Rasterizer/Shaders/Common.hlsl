@@ -36,6 +36,12 @@ float metallic;
 float roughness;
 float ao;
 
+Texture2D<float4> albedoTex;
+Texture2D<float3> normalTex;
+Texture2D<float> metallicTex;
+Texture2D<float> rougnessTex;
+Texture2D<float> aoTex;
+
 //buffers:
 StructuredBuffer<float3> _VertexBuffer;
 StructuredBuffer<float3> _NormalBuffer;

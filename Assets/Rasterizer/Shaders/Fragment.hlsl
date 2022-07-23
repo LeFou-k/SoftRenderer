@@ -18,12 +18,8 @@ float4 FragmentPhong(Varyings varyings)
 
     float NoH = dot(halfDir, varyings.normalWS);
     float4 specular = ks * _LightColor * pow(saturate(NoH), 50);
-
-    #if BLIN_PHONG
+    
     return saturate(_AmbientColor + (diffuse + specular) * GetSoftShadow(varyings.positionWS));
-    #elif PBR
-    return 1.0f;
-    #endif
 }
 
 float3 fresnelSchlick(float cosTheta, float3 F0)
@@ -66,7 +62,7 @@ float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-float4 FragnemtPBR(Varyings varyings)
+float4 PBRShading(Varyings varyings, float3 albedo, float metallic, float roughness, float ao)
 {
     float3 N = normalize(varyings.normalWS);
     float3 V = normalize(_CameraWS - varyings.positionWS);
@@ -94,6 +90,10 @@ float4 FragnemtPBR(Varyings varyings)
 
     return float4(ambient + Lo, 1.0f);
 }
+float4 FragnemtPBR(Varyings varyings)
+{
+    return PBRShading(varyings, albedo, metallic, roughness, ao);
+}
 
 float4 Shadings(Varyings varyings)
 {
@@ -101,6 +101,8 @@ float4 Shadings(Varyings varyings)
     return FragmentPhong(varyings);
     #elif PBR
     return FragnemtPBR(varyings);
+    #elif PBR_TEXTURE
+    return float4(0.8f, 0.1f, 0.2f, 1.0f);
     #endif
 }
 

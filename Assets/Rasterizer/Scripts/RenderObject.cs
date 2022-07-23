@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Rasterizer
 {
@@ -17,20 +18,33 @@ namespace Rasterizer
         public enum ShadingType
         {
             BlinPhong,
-            PBR
+            PBR,
+            PBRTexture
         }
 
         public PBRSettings _PbrSettings;
+        public PBRTextureSettings _PbrTextureSettings;
+        
         [Serializable]
         public class PBRSettings
         {
-            public Color albedo = Color.white;
+            public Color albedo = Color.red;
             [Range(0.0f, 1.0f)]
-            public float metallic = 0.0f;
+            public float metallic = 1.0f;
             [Range(0.0f, 1.0f)]
             public float roughness = 1.0f;
             [Range(0.0f, 1.0f)]
             public float ao = 1.0f;
+        }
+        
+        [Serializable]
+        public class PBRTextureSettings
+        {
+            public Texture2D albedo;
+            public Texture2D normal;
+            public Texture2D metallic;
+            public Texture2D roughness;
+            public Texture2D ao;
         }
         
         private void Start()
@@ -57,16 +71,18 @@ namespace Rasterizer
             {
                 Debug.LogError("None mesh renderer or material found!");
             }
-
+            
+            if (mesh != null)
+            {
+                renderObjectData = new RenderObjectData(mesh);
+            }
+            
             if (texture == null)
             {
                 texture = Texture2D.whiteTexture;
             }
 
-            if (mesh != null)
-            {
-                renderObjectData = new RenderObjectData(mesh);
-            }
+            
         }
 
         public Matrix4x4 GetModelMatrix()
