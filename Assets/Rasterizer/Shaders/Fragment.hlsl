@@ -78,7 +78,8 @@ float4 PBRShading(float3 positionWS, float3 normal, float3 albedo, float metalli
 
     float3 kS = F;
     float3 kD = 1.0f - kS;
-
+    kD *= 1.0 - metallic;
+    
     float3 numerator = NDF * G * F;
     float denominator = 4.0f * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001f;
     float3 specular = numerator / denominator;
@@ -86,14 +87,18 @@ float4 PBRShading(float3 positionWS, float3 normal, float3 albedo, float metalli
     float NdotL = max(dot(N, L), 0.f);
 
     float3 Lo = (kD * albedo / PI + specular) * _LightColor.rgb * NdotL;
-    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
-    
-    return float4(ambient + Lo, 1.0f);
+    float3 ambient = 0.03f * albedo * ao;
+    float3 color = ambient + Lo;
+
+    color = color / (color + 1.0f);
+    color = pow(color, 1.0f / 2.2f);
+    return float4(color, 1.0f);
 }
 
 float3 UnpackNormalMap(float3 normal)
 {
-    return normal * 2.0f - 1.0f;
+    normal = normal * 2.0f - 1.0f;
+    return normal;
 }
 
 float4 Shadings(Varyings varyings)
@@ -103,17 +108,20 @@ float4 Shadings(Varyings varyings)
     return PBRShading(varyings.positionWS, varyings.normalWS, albedo, metallic, roughness, ao);
     // return float4(0.1f, 0.2f, 0.9f, 1.0f);
 #elif PBR_TEXTURE
-    float3 _albedo = _Albedo.SampleLevel(sampler_Albedo, varyings.uv, 0).rgb;
+    float3 _albedo = pow(_Albedo.SampleLevel(sampler_Albedo, varyings.uv, 0).rgb, 2.2);
     float3 _normal = UnpackNormalMap(_Normal.SampleLevel(sampler_Normal, varyings.uv, 0));
-    float _metallic = _Metallic.SampleLevel(sampler_Metallic, varyings.uv, 0).r;
-    float _roughness = _Roughness.SampleLevel(sampler_Roughness, varyings.uv, 0).r;
+    float _height = _Height.SampleLevel(sampler_Height, varyings.uv, 0);
+    _height = _height * 2.f - 1.f;
+    float4 metal = _Metallic.SampleLevel(sampler_Metallic, varyings.uv, 0);
+    float _metallic = metal.r;
+    float _roughness = 1.0f - metal.a;
     float _ao = _AO.SampleLevel(sampler_AO, varyings.uv, 0).r;
     //transform normal to world space:
     float3x3 TBN = float3x3(varyings.tangentWS, varyings.bTangentWS, varyings.normalWS);
     TBN = transpose(TBN);
-    float3 normalWS = mul(TBN, _normal);
-    return PBRShading(varyings.positionWS, normalWS, _albedo, _metallic, _roughness, _ao);
-    
+    float3 normalWS = normalize(mul(TBN, _normal));
+    return PBRShading(varyings.positionWS + normalWS * _height * 1000.f, normalWS, _albedo, _metallic, _roughness, _ao);
+    // return float4(_normal, 1.0f);
 #else
     return FragmentPhong(varyings);
 #endif

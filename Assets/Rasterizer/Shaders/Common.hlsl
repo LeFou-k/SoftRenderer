@@ -42,10 +42,10 @@ Texture2D<float3> _Albedo;
 SamplerState sampler_Albedo;
 Texture2D<float3> _Normal;
 SamplerState sampler_Normal;
-Texture2D<float> _Metallic;
+Texture2D<float> _Height;
+SamplerState sampler_Height;
+Texture2D<float4> _Metallic;
 SamplerState sampler_Metallic;
-Texture2D<float> _Roughness;
-SamplerState sampler_Roughness;
 Texture2D<float> _AO;
 SamplerState sampler_AO;
 

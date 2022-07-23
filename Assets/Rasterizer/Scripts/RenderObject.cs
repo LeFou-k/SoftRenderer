@@ -42,8 +42,8 @@ namespace Rasterizer
         {
             public Texture2D albedo;
             public Texture2D normal;
+            public Texture2D height;
             public Texture2D metallic;
-            public Texture2D roughness;
             public Texture2D ao;
         }
         
@@ -85,10 +85,19 @@ namespace Rasterizer
             _PbrTextureSettings.albedo ??= Texture2D.whiteTexture;
             _PbrTextureSettings.normal ??= Texture2D.whiteTexture;
             _PbrTextureSettings.metallic ??= Texture2D.whiteTexture;
-            // _PbrTextureSettings.roughness ??= Texture2D.whiteTexture;
-            if (_PbrTextureSettings.roughness == null)
+            if (_PbrTextureSettings.albedo == null)
             {
-                _PbrTextureSettings.roughness = Texture2D.blackTexture;
+                _PbrTextureSettings.albedo = Texture2D.whiteTexture;
+            }
+
+            if (_PbrTextureSettings.metallic == null)
+            {
+                _PbrTextureSettings.metallic = Texture2D.blackTexture;
+            }
+
+            if (_PbrTextureSettings.height == null)
+            {
+                _PbrTextureSettings.height = Texture2D.grayTexture;
             }
 
             _PbrTextureSettings.ao ??= Texture2D.whiteTexture;

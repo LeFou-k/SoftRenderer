@@ -106,8 +106,8 @@ namespace Rasterizer
             
             public static readonly int albedoTexId = Shader.PropertyToID("_Albedo");
             public static readonly int normalTexId = Shader.PropertyToID("_Normal");
+            public static readonly int heightTexId = Shader.PropertyToID("_Height");
             public static readonly int metallicTexId = Shader.PropertyToID("_Metallic");
-            public static readonly int roughnessTexId = Shader.PropertyToID("_Roughness");
             public static readonly int aoTexId = Shader.PropertyToID("_AO");
         }
 
@@ -281,7 +281,7 @@ namespace Rasterizer
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.varyingsBufferId, data.varyingsBuffer);
             m_RasterizeCS.Dispatch(Properties.vertexKernel, Mathf.CeilToInt(data.vertexNum / 512.0f), 1, 1);
             Profiler.EndSample();
-            //
+            
             Profiler.BeginSample("Rasterization");
             m_RasterizeCS.SetBuffer(Properties.rasterizeKernel, Properties.triIndexBufferId, data.triIndexBuffer);
             m_RasterizeCS.SetBuffer(Properties.rasterizeKernel, Properties.varyingsBufferId, data.varyingsBuffer);
@@ -294,8 +294,8 @@ namespace Rasterizer
             {
                 m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.albedoTexId, renderObject._PbrTextureSettings.albedo);
                 m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.normalTexId, renderObject._PbrTextureSettings.normal);
+                m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.heightTexId, renderObject._PbrTextureSettings.height);
                 m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.metallicTexId, renderObject._PbrTextureSettings.metallic);
-                m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.roughnessTexId, renderObject._PbrTextureSettings.roughness);
                 m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.aoTexId, renderObject._PbrTextureSettings.ao);
             }
             
