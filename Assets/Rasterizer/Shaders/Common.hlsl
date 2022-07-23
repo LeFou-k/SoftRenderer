@@ -7,6 +7,8 @@ struct Varyings
     float3 positionWS;
     float3 normalOS;
     float3 normalWS;
+    float3 tangentWS;
+    float3 bTangentWS;
     float2 uv;
 };
 
@@ -36,15 +38,21 @@ float metallic;
 float roughness;
 float ao;
 
-Texture2D<float4> albedoTex;
-Texture2D<float3> normalTex;
-Texture2D<float> metallicTex;
-Texture2D<float> rougnessTex;
-Texture2D<float> aoTex;
+Texture2D<float3> _Albedo;
+SamplerState sampler_Albedo;
+Texture2D<float3> _Normal;
+SamplerState sampler_Normal;
+Texture2D<float> _Metallic;
+SamplerState sampler_Metallic;
+Texture2D<float> _Roughness;
+SamplerState sampler_Roughness;
+Texture2D<float> _AO;
+SamplerState sampler_AO;
 
 //buffers:
 StructuredBuffer<float3> _VertexBuffer;
 StructuredBuffer<float3> _NormalBuffer;
+StructuredBuffer<float4> _TangentBuffer;
 StructuredBuffer<float2> _UVBuffer;
 StructuredBuffer<uint3> _TriIndexBuffer;
 

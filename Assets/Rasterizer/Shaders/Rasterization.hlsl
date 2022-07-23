@@ -46,12 +46,16 @@ void Rasterization(uint3 idx, float4 v[3])
                 float3 normalP = (alpha * vary0.normalOS / v0.w + beta * vary1.normalOS / v1.w + gamma * vary2.normalOS / v2.w) * z;
                 float3 worldPosP = (alpha * vary0.positionWS / v0.w + beta * vary1.positionWS / v1.w + gamma * vary2.positionWS / v2.w) * z;
                 float3 worldNormalP = (alpha * vary0.normalWS / v0.w + beta * vary1.normalWS / v1.w + gamma * vary2.normalWS / v2.w) * z;
-
+                float3 worldTangentP = (alpha * vary0.tangentWS / v0.w + beta * vary1.tangentWS / v1.w + gamma * vary2.tangentWS / v2.w) * z;
+                float3 worldBTangentP = (alpha * vary0.bTangentWS / v0.w + beta * vary1.bTangentWS / v1.w + gamma * vary2.bTangentWS / v2.w) * z;
+                
                 Varyings varyings;
                 varyings.uv = uvP;
                 varyings.normalOS = normalP;
                 varyings.positionWS = worldPosP;
                 varyings.normalWS = worldNormalP;
+                varyings.tangentWS = worldTangentP;
+                varyings.bTangentWS = worldBTangentP;
                 
                 _ColorTexture[uint2(x, y)] = Shadings(varyings);
             }

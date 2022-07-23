@@ -85,6 +85,7 @@ namespace Rasterizer
             public static readonly int ambientColorId = Shader.PropertyToID("_AmbientColor");
             public static readonly int vertexBufferId = Shader.PropertyToID("_VertexBuffer");
             public static readonly int normalBufferId = Shader.PropertyToID("_NormalBuffer");
+            public static readonly int tangentBufferId = Shader.PropertyToID("_TangentBuffer");
             public static readonly int uvBufferId = Shader.PropertyToID("_UVBuffer");
             public static readonly int triIndexBufferId = Shader.PropertyToID("_TriIndexBuffer");
             public static readonly int varyingsBufferId = Shader.PropertyToID("_VaryingsBuffer");
@@ -102,6 +103,12 @@ namespace Rasterizer
             public static readonly int metallicId = Shader.PropertyToID("metallic");
             public static readonly int roughnessId = Shader.PropertyToID("roughness");
             public static readonly int aoId = Shader.PropertyToID("ao");
+            
+            public static readonly int albedoTexId = Shader.PropertyToID("_Albedo");
+            public static readonly int normalTexId = Shader.PropertyToID("_Normal");
+            public static readonly int metallicTexId = Shader.PropertyToID("_Metallic");
+            public static readonly int roughnessTexId = Shader.PropertyToID("_Roughness");
+            public static readonly int aoTexId = Shader.PropertyToID("_AO");
         }
 
         public Rasterizer(int w, int h, RasterizerSettings settings)
@@ -269,6 +276,7 @@ namespace Rasterizer
             Profiler.BeginSample("Vertex transformation");
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.vertexBufferId, data.vertexBuffer);
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.normalBufferId, data.normalBuffer);
+            m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.tangentBufferId, data.tangentBuffer);
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.uvBufferId, data.uvBuffer);
             m_RasterizeCS.SetBuffer(Properties.vertexKernel, Properties.varyingsBufferId, data.varyingsBuffer);
             m_RasterizeCS.Dispatch(Properties.vertexKernel, Mathf.CeilToInt(data.vertexNum / 512.0f), 1, 1);
@@ -281,6 +289,16 @@ namespace Rasterizer
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.depthTextureId, depthTexture);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.shadowMapTextureId, shadowMapTexture);
             m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.uvTextureId, renderObject.texture);
+
+            if (renderObject._ShadingType == RenderObject.ShadingType.PBRTexture)
+            {
+                m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.albedoTexId, renderObject._PbrTextureSettings.albedo);
+                m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.normalTexId, renderObject._PbrTextureSettings.normal);
+                m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.metallicTexId, renderObject._PbrTextureSettings.metallic);
+                m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.roughnessTexId, renderObject._PbrTextureSettings.roughness);
+                m_RasterizeCS.SetTexture(Properties.rasterizeKernel, Properties.aoTexId, renderObject._PbrTextureSettings.ao);
+            }
+            
             m_RasterizeCS.Dispatch(Properties.rasterizeKernel, Mathf.CeilToInt(triangles / 512.0f), 1, 1);
             Profiler.EndSample();
             

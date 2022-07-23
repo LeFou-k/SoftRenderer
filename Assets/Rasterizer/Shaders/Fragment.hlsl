@@ -62,10 +62,10 @@ float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-float4 PBRShading(Varyings varyings, float3 albedo, float metallic, float roughness, float ao)
+float4 PBRShading(float3 positionWS, float3 normal, float3 albedo, float metallic, float roughness, float ao)
 {
-    float3 N = normalize(varyings.normalWS);
-    float3 V = normalize(_CameraWS - varyings.positionWS);
+    float3 N = normalize(normal);
+    float3 V = normalize(_CameraWS - positionWS);
 
     float3 F0 = float3(0.04f, 0.04f, 0.04f);
     F0 = lerp(F0, albedo, metallic);
@@ -87,23 +87,36 @@ float4 PBRShading(Varyings varyings, float3 albedo, float metallic, float roughn
 
     float3 Lo = (kD * albedo / PI + specular) * _LightColor.rgb * NdotL;
     float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
-
+    
     return float4(ambient + Lo, 1.0f);
 }
-float4 FragnemtPBR(Varyings varyings)
+
+float3 UnpackNormalMap(float3 normal)
 {
-    return PBRShading(varyings, albedo, metallic, roughness, ao);
+    return normal * 2.0f - 1.0f;
 }
 
 float4 Shadings(Varyings varyings)
 {
-    #if BLIN_PHONG
+    
+#if PBR
+    return PBRShading(varyings.positionWS, varyings.normalWS, albedo, metallic, roughness, ao);
+    // return float4(0.1f, 0.2f, 0.9f, 1.0f);
+#elif PBR_TEXTURE
+    float3 _albedo = _Albedo.SampleLevel(sampler_Albedo, varyings.uv, 0).rgb;
+    float3 _normal = UnpackNormalMap(_Normal.SampleLevel(sampler_Normal, varyings.uv, 0));
+    float _metallic = _Metallic.SampleLevel(sampler_Metallic, varyings.uv, 0).r;
+    float _roughness = _Roughness.SampleLevel(sampler_Roughness, varyings.uv, 0).r;
+    float _ao = _AO.SampleLevel(sampler_AO, varyings.uv, 0).r;
+    //transform normal to world space:
+    float3x3 TBN = float3x3(varyings.tangentWS, varyings.bTangentWS, varyings.normalWS);
+    TBN = transpose(TBN);
+    float3 normalWS = mul(TBN, _normal);
+    return PBRShading(varyings.positionWS, normalWS, _albedo, _metallic, _roughness, _ao);
+    
+#else
     return FragmentPhong(varyings);
-    #elif PBR
-    return FragnemtPBR(varyings);
-    #elif PBR_TEXTURE
-    return float4(0.8f, 0.1f, 0.2f, 1.0f);
-    #endif
+#endif
 }
 
 

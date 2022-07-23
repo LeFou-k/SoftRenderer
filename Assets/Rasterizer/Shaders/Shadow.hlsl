@@ -60,6 +60,7 @@ float GetPCF(float3 positionCS, float radius)
     return vis * rcp(SAMPLES);
 }
 
+//Deprecated
 float GetPCSS(float3 positionCS)
 {
     float avgOccluDepth = GetOccluDepth(positionCS);

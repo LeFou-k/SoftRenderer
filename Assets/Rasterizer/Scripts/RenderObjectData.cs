@@ -7,6 +7,7 @@ namespace Rasterizer
     {
         public readonly ComputeBuffer vertexBuffer;
         public readonly ComputeBuffer normalBuffer;
+        public readonly ComputeBuffer tangentBuffer;
         public readonly ComputeBuffer uvBuffer;
         public readonly ComputeBuffer triIndexBuffer;
         public readonly ComputeBuffer varyingsBuffer;
@@ -22,6 +23,8 @@ namespace Rasterizer
             vertexBuffer.SetData(mesh.vertices);
             normalBuffer = new ComputeBuffer(vertexNum, 3 * sizeof(float));
             normalBuffer.SetData(mesh.normals);
+            tangentBuffer = new ComputeBuffer(vertexNum, 4 * sizeof(float));
+            tangentBuffer.SetData(mesh.tangents);
             uvBuffer = new ComputeBuffer(vertexNum, 2 * sizeof(float));
             uvBuffer.SetData(mesh.uv);
             
@@ -40,7 +43,7 @@ namespace Rasterizer
             triIndexBuffer = new ComputeBuffer(triangleNum, 3 * sizeof(uint));
             triIndexBuffer.SetData(triangles);
 
-            varyingsBuffer = new ComputeBuffer(vertexNum, 15 * sizeof(float));
+            varyingsBuffer = new ComputeBuffer(vertexNum, 21 * sizeof(float));
             shadowVaryingsBuffer = new ComputeBuffer(vertexNum, 4 * sizeof(float));
         }
 
@@ -48,6 +51,7 @@ namespace Rasterizer
         {
             vertexBuffer.Release();
             normalBuffer.Release();
+            tangentBuffer.Release();
             uvBuffer.Release();
             triIndexBuffer.Release();
             varyingsBuffer.Release();

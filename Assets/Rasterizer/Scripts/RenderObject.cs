@@ -28,13 +28,13 @@ namespace Rasterizer
         [Serializable]
         public class PBRSettings
         {
-            public Color albedo = Color.red;
+            public Color albedo;
             [Range(0.0f, 1.0f)]
-            public float metallic = 1.0f;
+            public float metallic;
             [Range(0.0f, 1.0f)]
-            public float roughness = 1.0f;
+            public float roughness;
             [Range(0.0f, 1.0f)]
-            public float ao = 1.0f;
+            public float ao;
         }
         
         [Serializable]
@@ -81,8 +81,18 @@ namespace Rasterizer
             {
                 texture = Texture2D.whiteTexture;
             }
-
             
+            _PbrTextureSettings.albedo ??= Texture2D.whiteTexture;
+            _PbrTextureSettings.normal ??= Texture2D.whiteTexture;
+            _PbrTextureSettings.metallic ??= Texture2D.whiteTexture;
+            // _PbrTextureSettings.roughness ??= Texture2D.whiteTexture;
+            if (_PbrTextureSettings.roughness == null)
+            {
+                _PbrTextureSettings.roughness = Texture2D.blackTexture;
+            }
+
+            _PbrTextureSettings.ao ??= Texture2D.whiteTexture;
+
         }
 
         public Matrix4x4 GetModelMatrix()

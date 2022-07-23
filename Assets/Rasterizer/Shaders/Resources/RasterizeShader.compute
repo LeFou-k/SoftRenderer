@@ -24,11 +24,14 @@ void VertexTransform(uint3 id : SV_DispatchThreadID)
     //Transform to right hand coordinate:
     float4 positionOS = float4(_VertexBuffer[id.x].xy, -_VertexBuffer[id.x].z, 1.0f);
     float3 normalOS = float3(_NormalBuffer[id.x].xy, -_NormalBuffer[id.x].z);
-
+    float4 tangentOS = float4(_TangentBuffer[id.x].xy, -_TangentBuffer[id.x].z, _TangentBuffer[id.x].w);
+    
     _VaryingsBuffer[id.x].positionCS = mul(_MatrixMVP, positionOS);
     _VaryingsBuffer[id.x].positionWS = mul(_MatrixM, positionOS).xyz;
     _VaryingsBuffer[id.x].normalOS = normalOS;
-    _VaryingsBuffer[id.x].normalWS = mul((float3x3)_MatrixM_IT, normalOS);
+    _VaryingsBuffer[id.x].normalWS = normalize(mul((float3x3)_MatrixM_IT, normalOS));
+    _VaryingsBuffer[id.x].tangentWS = normalize(mul((float3x3)_MatrixM, tangentOS.xyz));
+    _VaryingsBuffer[id.x].bTangentWS = normalize(cross(_VaryingsBuffer[id.x].normalWS, _VaryingsBuffer[id.x].tangentWS) * tangentOS.w);
     _VaryingsBuffer[id.x].uv = _UVBuffer[id.x];
     
 }
