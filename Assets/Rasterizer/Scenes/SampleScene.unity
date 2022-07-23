@@ -1648,13 +1648,13 @@ MonoBehaviour:
     albedo: {r: 1, g: 0, b: 0, a: 1}
     metallic: 0
     roughness: 0.646
-    ao: 1
+    ao: 0.265
   _PbrTextureSettings:
-    albedo: {fileID: 0}
-    normal: {fileID: 0}
-    height: {fileID: 0}
-    metallic: {fileID: 0}
-    ao: {fileID: 0}
+    albedo: {fileID: 2800000, guid: 77f31d4995bb22644b79f45e8aaf1df8, type: 3}
+    normal: {fileID: 2800000, guid: ce493f09940cc9541bdc6146eeccb6bc, type: 3}
+    height: {fileID: 2800000, guid: 7857d1bf8d673374691e847336b61a83, type: 3}
+    metallic: {fileID: 2800000, guid: 13c50d1059034a846aef7fb77a32e22f, type: 3}
+    ao: {fileID: 2800000, guid: 7d847803d24bd064ba8842cf06d53d54, type: 3}
 --- !u!135 &1927179702
 SphereCollider:
   m_ObjectHideFlags: 0

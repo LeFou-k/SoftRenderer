@@ -98,7 +98,7 @@ float4 PBRShading(float3 positionWS, float3 normal, float3 albedo, float metalli
 float3 UnpackNormalMap(float3 normal)
 {
     normal = normal * 2.0f - 1.0f;
-    return normal;
+    return normalize(normal);
 }
 
 float4 Shadings(Varyings varyings)
@@ -120,7 +120,9 @@ float4 Shadings(Varyings varyings)
     float3x3 TBN = float3x3(varyings.tangentWS, varyings.bTangentWS, varyings.normalWS);
     TBN = transpose(TBN);
     float3 normalWS = normalize(mul(TBN, _normal));
-    return PBRShading(varyings.positionWS + normalWS * _height * 1000.f, normalWS, _albedo, _metallic, _roughness, _ao);
+    // return PBRShading(varyings.positionWS, normalWS, _albedo, _metallic, _roughness, _ao);
+    return PBRShading(varyings.positionWS + normalWS * 500.f * _height, normalWS, _albedo, _metallic, _roughness, _ao);
+
     // return float4(_normal, 1.0f);
 #else
     return FragmentPhong(varyings);
