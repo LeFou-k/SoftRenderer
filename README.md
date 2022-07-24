@@ -18,7 +18,7 @@ Unity版本：**建议2021.3及以上的版本**（使用了compute shader变体
 
 整体效果概览：
 
-![image-20220724153754320](C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724153754320.png)
+![image-20220724153754320](README.assets/image-20220724153754320.png)
 
 简单的软件使用说明如下所示，更加详细的实现结果及展示在后续内容。
 
@@ -34,13 +34,13 @@ Unity版本：**建议2021.3及以上的版本**（使用了compute shader变体
 
 运行后可在Scene中调整相机清空帧缓冲的颜色，Blin-Phong模型中的Ambient颜色以及输出缓冲，输出缓冲支持帧缓冲、深度缓冲以及ShadowMap
 
-![image-20220724164217277](C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724164217277.png)
+![image-20220724164217277](README.assets/image-20220724164217277.png)
 
 当然也可调整平行光的颜色、强度、方向位置等，**不建议调整平行光的方向**，可能会导致场景被剔除NDC空间导致ShadowMap输出为空出现阴影错误的问题。
 
 在RenderObject中放置了每个可渲染的物体，可对每个物体调整材质相关信息，**如果Unity版本不支持compute shader变体会导致输出错误的问题**，不过项目已经默认在场景中RenderObject初始化了三种材质：Blin-Phong、基于参数的PBR材质和基于纹理的PBR材质，出现变体的Bug也不影响材质的输出查看，只是无法切换物体材质。
 
-![image-20220724164533770](C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724164533770.png)
+![image-20220724164533770](README.assets/image-20220724164533770.png)
 
 
 
@@ -73,7 +73,7 @@ Unity版本：**建议2021.3及以上的版本**（使用了compute shader变体
 
 透视矫正及视锥剔除示意图如下图所示，可以看出透视后的uv贴图正确，且将场景中物体移出视锥后帧率有明显提升，说明视锥剔除效果良好。
 
-<img src="C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724161348612.png" alt="image-20220724161348612" style="zoom: 67%;" />
+![image-20220724161348612](README.assets/image-20220724161348612.png)
 
 
 
@@ -87,7 +87,7 @@ PCF采用poisson disk采样的方式，计算周围样本的可见度取平均�
 
 效果如下图所示：
 
-![image-20220724160153669](C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724160153669.png)
+![image-20220724160153669](README.assets/image-20220724160153669.png)
 
 
 
@@ -99,7 +99,9 @@ PCF采用poisson disk采样的方式，计算周围样本的可见度取平均�
 
 如下图所示：
 
-![image-20220724162002792](C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724162002792.png)
+![image-20220724162002792](README.assets/image-20220724162002792.png)
+
+
 
 ### PBR材质
 
@@ -107,22 +109,22 @@ PCF采用poisson disk采样的方式，计算周围样本的可见度取平均�
 
 采用参数模拟PBR效果为：
 
-<img src="C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724162247094.png" alt="image-20220724162247094" style="zoom:67%;" />
+<img src="README.assets/image-20220724162247094.png" alt="image-20220724162247094" style="zoom:67%;" />
 
 参数如下图所示，可自行调整：
 
-![image-20220724162443394](C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724162443394.png)
+![image-20220724162443394](README.assets/image-20220724162443394.png)
 
 采用PBR纹理的方式作为输入：
 
 从左到右分别为：Albedo、AO、Height、Metallic、Normal
 
-![image-20220724163514944](C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724163514944.png)
+![image-20220724163514944](README.assets/image-20220724163514944.png)
 
 渲染结果如下图所示：
 
-<img src="C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724163629545.png" alt="image-20220724163629545" style="zoom:67%;" />
+![image-20220724163629545](README.assets/image-20220724163629545.png)
 
 另外渲染了一种相对不Metallic的材质：
 
-<img src="C:\Users\LiuKe\Documents\Computer\SoftRenderer\README.assets\image-20220724163806940.png" alt="image-20220724163806940" style="zoom:67%;" />
+![image-20220724163806940](README.assets/image-20220724163806940.png)
