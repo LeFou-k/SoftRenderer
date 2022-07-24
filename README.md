@@ -10,7 +10,7 @@ Unity版本：**建议2021.3及以上的版本**（使用了compute shader变体
 - Unity C#脚本负责组织逻辑及渲染管线，compute shader负责所有计算。
 - 实现了软光栅基本的深度测试、视锥剔除、背面剔除、透视矫正功能
 - 支持软阴影
-- Blin-Phong着色及PBR材质
+- Blinn-Phong着色及PBR材质
 - 支持多种buffer可视化：帧缓冲、深度缓冲以及ShadowMap
 - 支持FPS、三角形数量以及顶点数量的显示
 
@@ -93,9 +93,9 @@ PCF采用poisson disk采样的方式，计算周围样本的可见度取平均�
 
 ## 着色模型
 
-### Blin-Phong
+### Blinn-Phong
 
-默认场景中的立方体采用Blin-Phong的方式进行着色，即传统的Ambient + Diffuse + Specular的方式计算。
+默认场景中的立方体采用Blinn-Phong的方式进行着色，即传统的Ambient + Diffuse + Specular的方式计算。
 
 如下图所示：
 
