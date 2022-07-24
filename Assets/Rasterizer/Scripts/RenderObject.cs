@@ -82,9 +82,6 @@ namespace Rasterizer
                 texture = Texture2D.whiteTexture;
             }
             
-            _PbrTextureSettings.albedo ??= Texture2D.whiteTexture;
-            _PbrTextureSettings.normal ??= Texture2D.whiteTexture;
-            _PbrTextureSettings.metallic ??= Texture2D.whiteTexture;
             if (_PbrTextureSettings.albedo == null)
             {
                 _PbrTextureSettings.albedo = Texture2D.whiteTexture;
@@ -95,12 +92,21 @@ namespace Rasterizer
                 _PbrTextureSettings.metallic = Texture2D.blackTexture;
             }
 
+            if (_PbrTextureSettings.ao == null)
+            {
+                _PbrTextureSettings.ao = Texture2D.whiteTexture;
+            }
+
+            if (_PbrTextureSettings.normal == null)
+            {
+                _PbrTextureSettings.normal = Texture2D.normalTexture;
+            }
+            
             if (_PbrTextureSettings.height == null)
             {
                 _PbrTextureSettings.height = Texture2D.grayTexture;
             }
-
-            _PbrTextureSettings.ao ??= Texture2D.whiteTexture;
+            
 
         }
 
